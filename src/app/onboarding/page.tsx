@@ -13,6 +13,8 @@ export default function OnboardingPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [role, setRole] = useState<"owner" | "attendant">("owner");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -36,6 +38,12 @@ export default function OnboardingPage() {
 
     if (password.length < 6) {
       setError("Password must be at least 6 characters.");
+      setLoading(false);
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      setError("Passwords do not match.");
       setLoading(false);
       return;
     }
@@ -71,7 +79,7 @@ export default function OnboardingPage() {
           currency: "NGN",
           sidebar_collapsed: false,
           inventory_view: "grid",
-        })
+        }),
       );
       setEmailSent(true);
       setLoading(false);
@@ -98,8 +106,13 @@ export default function OnboardingPage() {
     window.location.href = "/dashboard";
   }
 
-  const isDisabled = loading || !firstName || !storeName || !email || !password;
-
+  const isDisabled =
+    loading ||
+    !firstName ||
+    !storeName ||
+    !email ||
+    !password ||
+    !confirmPassword;
   const steps = [
     {
       num: 1,
@@ -129,15 +142,26 @@ export default function OnboardingPage() {
         style={{ backgroundColor: "#E1F5EE" }}
       >
         <div className="w-full max-w-md bg-white rounded-2xl shadow-sm p-8 text-center space-y-5">
-
           {/* Icon */}
           <div
             className="w-16 h-16 rounded-full flex items-center justify-center mx-auto"
             style={{ backgroundColor: "#E1F5EE" }}
           >
             <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
-              <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" stroke="#1D9E75" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              <path d="M22 6l-10 7L2 6" stroke="#1D9E75" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              <path
+                d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"
+                stroke="#1D9E75"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+              <path
+                d="M22 6l-10 7L2 6"
+                stroke="#1D9E75"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
             </svg>
           </div>
 
@@ -161,7 +185,7 @@ export default function OnboardingPage() {
             {[
               "Open your email inbox",
               "Find the email from Stokk",
-              "Click \"Confirm my account\"",
+              'Click "Confirm my account"',
               "You'll be redirected to your dashboard",
             ].map((step, i) => (
               <div key={i} className="flex items-center gap-3">
@@ -200,7 +224,6 @@ export default function OnboardingPage() {
           >
             Back to login
           </button>
-
         </div>
       </div>
     );
@@ -209,19 +232,24 @@ export default function OnboardingPage() {
   // ── Main registration form ──
   return (
     <div className="min-h-screen flex flex-col lg:flex-row">
-
       {/* ── MOBILE: dark green top header ── */}
       <div
-        className="lg:hidden flex flex-col px-6 pt-10 pb-6"
+        className="lg:hidden flex flex-col px-6 pt-10 pb-6 items-center text-center"
         style={{ backgroundColor: "#0D3B2E" }}
       >
         <button
           onClick={() => router.push("/login")}
-          className="flex items-center gap-2 text-sm mb-5"
+          className="flex items-center gap-2 text-sm mb-5 self-start"
           style={{ color: "rgba(255,255,255,0.65)" }}
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-            <path d="M19 12H5M12 5l-7 7 7 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            <path
+              d="M19 12H5M12 5l-7 7 7 7"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
           </svg>
           Back to login
         </button>
@@ -231,7 +259,10 @@ export default function OnboardingPage() {
         </p>
         {/* Progress bar */}
         <div>
-          <p className="text-xs mb-2" style={{ color: "rgba(255,255,255,0.5)" }}>
+          <p
+            className="text-xs mb-2"
+            style={{ color: "rgba(255,255,255,0.5)" }}
+          >
             Step 1 of 3 — Account details
           </p>
           <div
@@ -259,14 +290,42 @@ export default function OnboardingPage() {
           >
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
               <rect x="3" y="3" width="8" height="8" rx="2" fill="#5DCAA5" />
-              <rect x="13" y="3" width="8" height="8" rx="2" fill="#5DCAA5" opacity="0.6" />
-              <rect x="3" y="13" width="8" height="8" rx="2" fill="#5DCAA5" opacity="0.6" />
-              <rect x="13" y="13" width="8" height="8" rx="2" fill="#5DCAA5" opacity="0.3" />
+              <rect
+                x="13"
+                y="3"
+                width="8"
+                height="8"
+                rx="2"
+                fill="#5DCAA5"
+                opacity="0.6"
+              />
+              <rect
+                x="3"
+                y="13"
+                width="8"
+                height="8"
+                rx="2"
+                fill="#5DCAA5"
+                opacity="0.6"
+              />
+              <rect
+                x="13"
+                y="13"
+                width="8"
+                height="8"
+                rx="2"
+                fill="#5DCAA5"
+                opacity="0.3"
+              />
             </svg>
           </div>
           <div>
-            <div className="text-white text-lg font-bold tracking-tight">Stokk</div>
-            <div className="text-xs" style={{ color: "#5DCAA5" }}>Smart Inventory & Profit</div>
+            <div className="text-white text-lg font-bold tracking-tight">
+              Stokk
+            </div>
+            <div className="text-xs" style={{ color: "#5DCAA5" }}>
+              Smart Inventory & Profit
+            </div>
           </div>
         </div>
 
@@ -295,21 +354,39 @@ export default function OnboardingPage() {
                     className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 text-sm font-bold"
                     style={{
                       backgroundColor: step.done ? "#1D9E75" : "transparent",
-                      border: step.done ? "none" : "2px solid rgba(255,255,255,0.2)",
+                      border: step.done
+                        ? "none"
+                        : "2px solid rgba(255,255,255,0.2)",
                       color: step.done ? "#fff" : "rgba(255,255,255,0.4)",
                     }}
                   >
                     {step.done ? (
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                        <path d="M5 13l4 4L19 7" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+                      <svg
+                        width="14"
+                        height="14"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                      >
+                        <path
+                          d="M5 13l4 4L19 7"
+                          stroke="white"
+                          strokeWidth="2.5"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
                       </svg>
                     ) : (
                       step.num
                     )}
                   </div>
                   <div className="pt-0.5">
-                    <p className="text-sm font-semibold text-white">{step.title}</p>
-                    <p className="text-xs mt-0.5" style={{ color: "rgba(255,255,255,0.5)" }}>
+                    <p className="text-sm font-semibold text-white">
+                      {step.title}
+                    </p>
+                    <p
+                      className="text-xs mt-0.5"
+                      style={{ color: "rgba(255,255,255,0.5)" }}
+                    >
                       {step.desc}
                     </p>
                   </div>
@@ -333,7 +410,10 @@ export default function OnboardingPage() {
             border: "1px solid rgba(255,255,255,0.1)",
           }}
         >
-          <div className="w-2 h-2 rounded-full" style={{ backgroundColor: "#5DCAA5" }} />
+          <div
+            className="w-2 h-2 rounded-full"
+            style={{ backgroundColor: "#5DCAA5" }}
+          />
           <span className="text-sm" style={{ color: "rgba(255,255,255,0.6)" }}>
             Currently serving
           </span>
@@ -344,21 +424,23 @@ export default function OnboardingPage() {
       {/* ── Right panel / Mobile form ── */}
       <div className="flex-1 flex items-start lg:items-center justify-center p-6 bg-white">
         <div className="w-full max-w-sm pt-2 lg:pt-0">
-
           {/* Desktop heading */}
           <div className="hidden lg:block mb-7">
-            <h2 className="text-2xl font-bold text-gray-900">Create your account</h2>
+            <h2 className="text-2xl font-bold text-gray-900">
+              Create your account
+            </h2>
             <p className="text-gray-500 text-sm mt-1">
               Get started with Stokk — it&apos;s free
             </p>
           </div>
 
           <div className="space-y-4">
-
             {/* First + Last name row */}
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <label className="text-sm font-medium text-gray-700">First name</label>
+                <label className="text-sm font-medium text-gray-700">
+                  First name
+                </label>
                 <input
                   type="text"
                   value={firstName}
@@ -369,7 +451,9 @@ export default function OnboardingPage() {
                 />
               </div>
               <div className="space-y-1.5">
-                <label className="text-sm font-medium text-gray-700">Last name</label>
+                <label className="text-sm font-medium text-gray-700">
+                  Last name
+                </label>
                 <input
                   type="text"
                   value={lastName}
@@ -383,7 +467,9 @@ export default function OnboardingPage() {
 
             {/* Store name */}
             <div className="space-y-1.5">
-              <label className="text-sm font-medium text-gray-700">Store name</label>
+              <label className="text-sm font-medium text-gray-700">
+                Store name
+              </label>
               <input
                 type="text"
                 value={storeName}
@@ -396,7 +482,9 @@ export default function OnboardingPage() {
 
             {/* Email */}
             <div className="space-y-1.5">
-              <label className="text-sm font-medium text-gray-700">Email address</label>
+              <label className="text-sm font-medium text-gray-700">
+                Email address
+              </label>
               <input
                 type="email"
                 value={email}
@@ -409,7 +497,9 @@ export default function OnboardingPage() {
 
             {/* Password + strength bar */}
             <div className="space-y-1.5">
-              <label className="text-sm font-medium text-gray-700">Password</label>
+              <label className="text-sm font-medium text-gray-700">
+                Password
+              </label>
               <div className="relative">
                 <input
                   type={showPassword ? "text" : "password"}
@@ -432,19 +522,70 @@ export default function OnboardingPage() {
                   <div className="h-1 rounded-full bg-gray-100 overflow-hidden mt-1.5">
                     <div
                       className="h-full rounded-full transition-all duration-300"
-                      style={{ width: strengthWidth, backgroundColor: strengthColor }}
+                      style={{
+                        width: strengthWidth,
+                        backgroundColor: strengthColor,
+                      }}
                     />
                   </div>
-                  <p className="text-xs mt-1 font-medium" style={{ color: strengthColor }}>
+                  <p
+                    className="text-xs mt-1 font-medium"
+                    style={{ color: strengthColor }}
+                  >
                     {strengthLabel}
                   </p>
                 </div>
               )}
             </div>
 
+            {/* Confirm password */}
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium text-gray-700">
+                Confirm password
+              </label>
+              <div className="relative">
+                <input
+                  type={showConfirmPassword ? "text" : "password"}
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  placeholder="Re-enter your password"
+                  className="w-full h-11 px-3 pr-10 rounded-lg border text-sm outline-none transition"
+                  style={{
+                    borderColor: confirmPassword
+                      ? password === confirmPassword
+                        ? "#1D9E75"
+                        : "#EF4444"
+                      : "#E5E7EB",
+                  }}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                >
+                  {showConfirmPassword ? (
+                    <EyeOff size={16} />
+                  ) : (
+                    <Eye size={16} />
+                  )}
+                </button>
+              </div>
+              {confirmPassword.length > 0 && password !== confirmPassword && (
+                <p className="text-xs font-medium" style={{ color: "#EF4444" }}>
+                  Passwords do not match
+                </p>
+              )}
+              {confirmPassword.length > 0 && password === confirmPassword && (
+                <p className="text-xs font-medium" style={{ color: "#1D9E75" }}>
+                  Passwords match ✓
+                </p>
+              )}
+            </div>
             {/* Role selector */}
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">Your role</label>
+              <label className="text-sm font-medium text-gray-700">
+                Your role
+              </label>
               <div className="grid grid-cols-2 gap-3">
                 {[
                   {
@@ -474,14 +615,27 @@ export default function OnboardingPage() {
                     <span className="text-sm font-semibold text-gray-900 mb-1">
                       {r.title}
                     </span>
-                    <span className="text-xs text-gray-500 leading-tight">{r.desc}</span>
+                    <span className="text-xs text-gray-500 leading-tight">
+                      {r.desc}
+                    </span>
                     {role === r.value && (
                       <div
                         className="w-4 h-4 rounded-full flex items-center justify-center mt-2"
                         style={{ backgroundColor: "#1D9E75" }}
                       >
-                        <svg width="8" height="8" viewBox="0 0 24 24" fill="none">
-                          <path d="M5 13l4 4L19 7" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
+                        <svg
+                          width="8"
+                          height="8"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                        >
+                          <path
+                            d="M5 13l4 4L19 7"
+                            stroke="white"
+                            strokeWidth="3"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
                         </svg>
                       </div>
                     )}
@@ -526,10 +680,12 @@ export default function OnboardingPage() {
               style={{ backgroundColor: isDisabled ? "#9CA3AF" : "#0D3B2E" }}
               className="w-full h-11 text-white text-sm font-semibold rounded-lg transition disabled:cursor-not-allowed"
               onMouseEnter={(e) => {
-                if (!isDisabled) e.currentTarget.style.backgroundColor = "#0F6E56";
+                if (!isDisabled)
+                  e.currentTarget.style.backgroundColor = "#0F6E56";
               }}
               onMouseLeave={(e) => {
-                if (!isDisabled) e.currentTarget.style.backgroundColor = "#0D3B2E";
+                if (!isDisabled)
+                  e.currentTarget.style.backgroundColor = "#0D3B2E";
               }}
             >
               {loading ? "Creating account…" : "Create my Stokk account"}
@@ -545,7 +701,6 @@ export default function OnboardingPage() {
                 Sign in
               </button>
             </p>
-
           </div>
         </div>
       </div>
