@@ -162,7 +162,7 @@ export default async function DashboardPage() {
     .slice(0, 4);
 
   // Brand summary
-  
+
   const colorPalette = [
     { color: "#E1F5EE", textColor: "#0F6E56" },
     { color: "#DBEAFE", textColor: "#1E3A8A" },
@@ -300,33 +300,58 @@ export default async function DashboardPage() {
         <div className="p-6 space-y-6">
           {/* Stat cards */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            {[
-              {
-                label: "Monthly revenue",
-                value: fmt(monthlyRevenue),
-                change: revenueChange,
-                positive: true,
-              },
-              {
-                label: "Monthly profit",
-                value: fmt(monthlyProfit),
-                change: profitChange,
-                positive: true,
-              },
-              {
-                label: "Today's sales",
-                value: fmt(todayRevenue),
-                change: `${todayCount} transaction${todayCount !== 1 ? "s" : ""}`,
-                positive: true,
-              },
-              {
-                label: "Low stock items",
-                value: String(lowStockItems.length),
-                change:
-                  lowStockItems.length > 0 ? "Needs restocking" : "All good",
-                warn: lowStockItems.length > 0,
-              },
-            ].map((stat) => (
+            {(profile.role === "owner"
+              ? [
+                  {
+                    label: "Monthly revenue",
+                    value: fmt(monthlyRevenue),
+                    change: revenueChange,
+                    changeLabel: "vs last month",
+                    positive: true,
+                  },
+                  {
+                    label: "Monthly profit",
+                    value: fmt(monthlyProfit),
+                    change: profitChange,
+                    changeLabel: "vs last month",
+                    positive: true,
+                  },
+                  {
+                    label: "Today's sales",
+                    value: fmt(todayRevenue),
+                    change: `${todayCount} transaction${todayCount !== 1 ? "s" : ""}`,
+                    changeLabel: "",
+                    positive: true,
+                  },
+                  {
+                    label: "Low stock items",
+                    value: String(lowStockItems.length),
+                    change:
+                      lowStockItems.length > 0
+                        ? "Needs restocking"
+                        : "All good",
+                    warn: lowStockItems.length > 0,
+                  },
+                ]
+              : [
+                  {
+                    label: "Today's transactions",
+                    value: String(todayCount),
+                    change: `${fmt(todayRevenue)} sold today`,
+                    changeLabel: "",
+                    positive: true,
+                  },
+                  {
+                    label: "Low stock items",
+                    value: String(lowStockItems.length),
+                    change:
+                      lowStockItems.length > 0
+                        ? "Needs restocking"
+                        : "All good",
+                    warn: lowStockItems.length > 0,
+                  },
+                ]
+            ).map((stat) => (
               <div
                 key={stat.label}
                 className="bg-white rounded-2xl p-4 border"
@@ -358,6 +383,7 @@ export default async function DashboardPage() {
           </div>
 
           {/* Revenue chart + Recent sales */}
+          {profile.role === "owner" && (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
             <div className="lg:col-span-2 bg-white rounded-2xl p-5 border border-gray-100">
               <div className="flex items-center justify-between mb-4">
@@ -459,9 +485,10 @@ export default async function DashboardPage() {
               )}
             </div>
           </div>
+          )}
 
           {/* Low stock + Brand summary + P&L */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          <div className={`grid grid-cols-1 gap-4 ${profile.role === "owner" ? "lg:grid-cols-3" : ""}`}>
             {/* Low stock */}
             <div className="bg-white rounded-2xl p-5 border border-gray-100">
               <div className="flex items-center justify-between mb-4">
@@ -577,7 +604,8 @@ export default async function DashboardPage() {
               )}
             </div>
 
-            {/* P&L */}
+            {/* P&L — owner only */}
+            {profile.role === "owner" && (
             <div className="bg-white rounded-2xl p-5 border border-gray-100">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-sm font-semibold text-gray-900">
@@ -647,6 +675,7 @@ export default async function DashboardPage() {
                 </span>
               </div>
             </div>
+              )}
           </div>
 
           {/* Top products */}

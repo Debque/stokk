@@ -222,13 +222,29 @@ const [tooltip, setTooltip] = useState<string | null>(null);
     .toUpperCase()
     .slice(0, 2);
 
-  const allNavSections = [
-    { items: navItems, section: null },
-    { items: financeItems, section: "Finance" },
-    { items: stockItems, section: "Stock" },
-    { items: settingsItems, section: "Settings" },
+ const ownerFinanceItems = financeItems;
+  const ownerStockItems = stockItems;
+  const ownerSettingsItems = settingsItems;
+
+  const attendantStockItems = [
+    { icon: "imei", label: "IMEI Tracker", href: "/imei" },
+  ];
+  const attendantSettingsItems = [
+    { icon: "settings", label: "Settings", href: "/settings" },
   ];
 
+  const allNavSections = role === "owner"
+    ? [
+        { items: navItems, section: null },
+        { items: ownerFinanceItems, section: "Finance" },
+        { items: ownerStockItems, section: "Stock" },
+        { items: ownerSettingsItems, section: "Settings" },
+      ]
+    : [
+        { items: navItems, section: null },
+        { items: attendantStockItems, section: "Stock" },
+        { items: attendantSettingsItems, section: "Settings" },
+      ];
   return (
     <aside
       className="flex flex-col h-screen sticky top-0 transition-all duration-200 flex-shrink-0"
