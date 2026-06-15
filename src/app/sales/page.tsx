@@ -16,28 +16,24 @@ export default async function SalesPage() {
     .single();
   if (!profile) redirect("/onboarding");
 
-  // Fetch all products
   const { data: products } = await supabase
     .from("products")
     .select("id, name, brand_id, is_serialized, cost_price, selling_price, quantity, minimum_stock")
     .is("deleted_at", null)
     .order("name");
 
-  // Fetch brands
   const { data: brands } = await supabase
     .from("brands")
     .select("id, name");
 
-  // Fetch available (in_stock) serialized units
   const { data: stockItems } = await supabase
     .from("stock_items")
     .select("id, product_id, imei, variant, cost_price, status")
     .eq("status", "in_stock");
 
-  // Fetch recent sales
   const { data: recentSales } = await supabase
     .from("sales")
-    .select("id, product_name, brand_name, quantity_sold, selling_price, profit, sold_at, stock_item_id, customer_name, via_quick_sale")
+    .select("id, product_id, product_name, brand_name, quantity_sold, selling_price, profit, sold_at, stock_item_id, customer_name, via_quick_sale")
     .order("sold_at", { ascending: false })
     .limit(20);
 

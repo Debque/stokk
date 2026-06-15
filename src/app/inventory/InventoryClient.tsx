@@ -72,13 +72,15 @@ export default function InventoryClient({ brands, products, profile }: Props) {
   const [selectedBrandId, setSelectedBrandId] = useState<string | null>(null);
   const [showProducts, setShowProducts] = useState(false);
   const [search, setSearch] = useState("");
-  const [filterStatus, setFilterStatus] = useState<"all" | "low" | "out">(
-    "all",
-  );
+  const [filterStatus, setFilterStatus] = useState<"all" | "low" | "out">("all");
   const [showAddProduct, setShowAddProduct] = useState(false);
+  const [showEditProduct, setShowEditProduct] = useState<Product | null>(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState<Product | null>(null);
   const [loading, setLoading] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showBrandSuggestions, setShowBrandSuggestions] = useState(false);
+  const [showEditBrandSuggestions, setShowEditBrandSuggestions] = useState(false);
 
   // ── Add product form state ─────────────────────────────────────────────────
   const [form, setForm] = useState({
@@ -92,17 +94,23 @@ export default function InventoryClient({ brands, products, profile }: Props) {
     minimumStock: "5",
   });
 
+  // ── Edit product form state ────────────────────────────────────────────────
+  const [editForm, setEditForm] = useState({
+    name: "",
+    brandName: "",
+    brandId: "",
+    category: "Smartphones",
+    costPrice: "",
+    sellingPrice: "",
+    minimumStock: "5",
+  });
+
   // ── Filtered products ──────────────────────────────────────────────────────
   const filtered = useMemo(() => {
     return products.filter((p) => {
       if (selectedBrandId && p.brand_id !== selectedBrandId) return false;
-      if (search && !p.name.toLowerCase().includes(search.toLowerCase()))
-        return false;
-      if (
-        filterStatus === "low" &&
-        !(p.currentStock > 0 && p.currentStock <= p.minimum_stock)
-      )
-        return false;
+      if (search && !p.name.toLowerCase().includes(search.toLowerCase())) return false;
+      if (filterStatus === "low" && !(p.currentStock > 0 && p.currentStock <= p.minimum_stock)) return false;
       if (filterStatus === "out" && p.currentStock !== 0) return false;
       return true;
     });
@@ -110,10 +118,7 @@ export default function InventoryClient({ brands, products, profile }: Props) {
 
   // ── Brand stats ────────────────────────────────────────────────────────────
   const brandStats = useMemo(() => {
-    const map: Record<
-      string,
-      { units: number; value: number; models: number }
-    > = {};
+    const map: Record<string, { units: number; value: number; models: number }> = {};
     products.forEach((p) => {
       if (!p.brand_id) return;
       if (!map[p.brand_id]) map[p.brand_id] = { units: 0, value: 0, models: 0 };
@@ -124,16 +129,18 @@ export default function InventoryClient({ brands, products, profile }: Props) {
     return map;
   }, [products]);
 
-  // ── Brand suggestions for autocomplete ────────────────────────────────────
-  const brandSuggestions = brands.filter(
-    (b) =>
-      b.name.toLowerCase().includes(form.brandName.toLowerCase()) &&
-      form.brandName.length > 0,
+  // ── Brand suggestions ──────────────────────────────────────────────────────
+  const brandSuggestions = brands.filter((b) =>
+    b.name.toLowerCase().includes(form.brandName.toLowerCase()) && form.brandName.length > 0
+  );
+
+  const editBrandSuggestions = brands.filter((b) =>
+    b.name.toLowerCase().includes(editForm.brandName.toLowerCase()) && editForm.brandName.length > 0
   );
 
   // ── Counts ─────────────────────────────────────────────────────────────────
   const lowStockCount = products.filter(
-    (p) => p.currentStock > 0 && p.currentStock <= p.minimum_stock,
+    (p) => p.currentStock > 0 && p.currentStock <= p.minimum_stock
   ).length;
 
   const totalProducts = products.length;
@@ -141,11 +148,9 @@ export default function InventoryClient({ brands, products, profile }: Props) {
   // ── Format currency ────────────────────────────────────────────────────────
   const fmt = (n: number) => `₦${Math.round(n).toLocaleString("en-NG")}`;
   const fmtShort = (n: number) =>
-    n >= 1_000_000
-      ? `₦${(n / 1_000_000).toFixed(1)}M`
-      : n >= 1_000
-        ? `₦${(n / 1_000).toFixed(0)}K`
-        : `₦${n}`;
+    n >= 1_000_000 ? `₦${(n / 1_000_000).toFixed(1)}M`
+    : n >= 1_000 ? `₦${(n / 1_000).toFixed(0)}K`
+    : `₦${n}`;
 
   // ── Add product handler ────────────────────────────────────────────────────
   async function handleAddProduct() {
@@ -213,6 +218,103 @@ export default function InventoryClient({ brands, products, profile }: Props) {
     }
   }
 
+  // ── Open edit modal ────────────────────────────────────────────────────────
+  function openEditModal(product: Product) {
+    const brandName = brands.find((b) => b.id === product.brand_id)?.name ?? "";
+    setEditForm({
+      name: product.name,
+      brandName,
+      brandId: product.brand_id ?? "",
+      category: product.category,
+      costPrice: String(product.cost_price),
+      sellingPrice: String(product.selling_price),
+      minimumStock: String(product.minimum_stock),
+    });
+    setShowEditProduct(product);
+    setError(null);
+  }
+
+  // ── Edit product handler ───────────────────────────────────────────────────
+  async function handleEditProduct() {
+    if (!editForm.name || !editForm.brandName || !editForm.sellingPrice) {
+      setError("Product name, brand, and selling price are required.");
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      let brandId = editForm.brandId;
+
+      if (!brandId || !brands.find((b) => b.id === brandId && b.name.toLowerCase() === editForm.brandName.toLowerCase())) {
+        const { data: existingBrand } = await supabase
+          .from("brands")
+          .select("id")
+          .ilike("name", editForm.brandName)
+          .single();
+
+        if (existingBrand) {
+          brandId = existingBrand.id;
+        } else {
+          const { data: newBrand, error: brandError } = await supabase
+            .from("brands")
+            .insert({ name: editForm.brandName.trim() })
+            .select("id")
+            .single();
+
+          if (brandError) throw brandError;
+          brandId = newBrand.id;
+        }
+      }
+
+      const { error: updateError } = await supabase
+        .from("products")
+        .update({
+          name: editForm.name.trim(),
+          brand_id: brandId,
+          category: editForm.category,
+          cost_price: Number(editForm.costPrice) || 0,
+          selling_price: Number(editForm.sellingPrice),
+          minimum_stock: Number(editForm.minimumStock) || 5,
+        })
+        .eq("id", showEditProduct!.id);
+
+      if (updateError) throw updateError;
+
+      setShowEditProduct(null);
+      router.refresh();
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Something went wrong.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  // ── Delete product handler ─────────────────────────────────────────────────
+  async function handleDeleteProduct() {
+    if (!showDeleteConfirm) return;
+
+    setDeleteLoading(true);
+    setError(null);
+
+    try {
+      const { error: deleteError } = await supabase
+        .from("products")
+        .update({ deleted_at: new Date().toISOString() })
+        .eq("id", showDeleteConfirm.id);
+
+      if (deleteError) throw deleteError;
+
+      setShowDeleteConfirm(null);
+      router.refresh();
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Something went wrong.");
+    } finally {
+      setDeleteLoading(false);
+    }
+  }
+
   const selectedBrandName = brands.find((b) => b.id === selectedBrandId)?.name;
 
   return (
@@ -224,8 +326,7 @@ export default function InventoryClient({ brands, products, profile }: Props) {
           <div>
             <h1 className="text-lg font-bold text-gray-900">Inventory</h1>
             <p className="text-xs text-gray-500 mt-0.5">
-              {totalProducts} product{totalProducts !== 1 ? "s" : ""} ·{" "}
-              {brands.length} brand{brands.length !== 1 ? "s" : ""}
+              {totalProducts} product{totalProducts !== 1 ? "s" : ""} · {brands.length} brand{brands.length !== 1 ? "s" : ""}
             </p>
           </div>
         </div>
@@ -236,12 +337,7 @@ export default function InventoryClient({ brands, products, profile }: Props) {
             style={{ backgroundColor: "#0D3B2E" }}
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-              <path
-                d="M12 5v14M5 12h14"
-                stroke="currentColor"
-                strokeWidth="2.5"
-                strokeLinecap="round"
-              />
+              <path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"/>
             </svg>
             Add product
           </button>
@@ -249,20 +345,16 @@ export default function InventoryClient({ brands, products, profile }: Props) {
       </div>
 
       <div className="p-4 lg:p-6 space-y-5">
-        {/* ── Filters at top ── */}
+
+        {/* ── Filters ── */}
         <div className="flex flex-wrap items-center gap-2">
           <div
             className="flex items-center gap-2 flex-1 min-w-48 h-10 px-3 rounded-xl border bg-white"
             style={{ borderColor: "#E5E7EB" }}
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-              <circle cx="11" cy="11" r="8" stroke="#9CA3AF" strokeWidth="2" />
-              <path
-                d="M21 21l-4.35-4.35"
-                stroke="#9CA3AF"
-                strokeWidth="2"
-                strokeLinecap="round"
-              />
+              <circle cx="11" cy="11" r="8" stroke="#9CA3AF" strokeWidth="2"/>
+              <path d="M21 21l-4.35-4.35" stroke="#9CA3AF" strokeWidth="2" strokeLinecap="round"/>
             </svg>
             <input
               type="text"
@@ -280,11 +372,7 @@ export default function InventoryClient({ brands, products, profile }: Props) {
             <button
               key={status}
               onClick={() => {
-                if (
-                  filterStatus === status &&
-                  showProducts &&
-                  !selectedBrandId
-                ) {
+                if (filterStatus === status && showProducts && !selectedBrandId) {
                   setShowProducts(false);
                 } else {
                   setFilterStatus(status as "all" | "low" | "out");
@@ -294,37 +382,22 @@ export default function InventoryClient({ brands, products, profile }: Props) {
               }}
               className="h-10 px-4 rounded-xl text-sm font-medium border transition"
               style={{
-                backgroundColor:
-                  filterStatus === status && showProducts && !selectedBrandId
-                    ? status === "low"
-                      ? "#FFF7ED"
-                      : status === "out"
-                        ? "#FEE2E2"
-                        : "#E1F5EE"
-                    : "#fff",
-                borderColor:
-                  filterStatus === status && showProducts && !selectedBrandId
-                    ? status === "low"
-                      ? "#FED7AA"
-                      : status === "out"
-                        ? "#FCA5A5"
-                        : "#5DCAA5"
-                    : "#E5E7EB",
-                color:
-                  filterStatus === status && showProducts && !selectedBrandId
-                    ? status === "low"
-                      ? "#9A3412"
-                      : status === "out"
-                        ? "#7F1D1D"
-                        : "#0F6E56"
-                    : "#6B7280",
+                backgroundColor: filterStatus === status && showProducts && !selectedBrandId
+                  ? status === "low" ? "#FFF7ED" : status === "out" ? "#FEE2E2" : "#E1F5EE"
+                  : "#fff",
+                borderColor: filterStatus === status && showProducts && !selectedBrandId
+                  ? status === "low" ? "#FED7AA" : status === "out" ? "#FCA5A5" : "#5DCAA5"
+                  : "#E5E7EB",
+                color: filterStatus === status && showProducts && !selectedBrandId
+                  ? status === "low" ? "#9A3412" : status === "out" ? "#7F1D1D" : "#0F6E56"
+                  : "#6B7280",
               }}
             >
               {status === "all"
                 ? `All (${products.length})`
                 : status === "low"
-                  ? `Low stock (${lowStockCount})`
-                  : "Out of stock"}
+                ? `Low stock (${lowStockCount})`
+                : "Out of stock"}
             </button>
           ))}
         </div>
@@ -333,11 +406,7 @@ export default function InventoryClient({ brands, products, profile }: Props) {
         {brands.length > 0 && (
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
             {brands.map((brand, i) => {
-              const stats = brandStats[brand.id] ?? {
-                units: 0,
-                value: 0,
-                models: 0,
-              };
+              const stats = brandStats[brand.id] ?? { units: 0, value: 0, models: 0 };
               const color = getBrandColor(i);
               const isSelected = selectedBrandId === brand.id;
               return (
@@ -365,29 +434,17 @@ export default function InventoryClient({ brands, products, profile }: Props) {
                   >
                     {brand.name[0].toUpperCase()}
                   </div>
-                  <div className="text-sm font-bold text-gray-900 mb-1">
-                    {brand.name}
-                  </div>
-                  <div
-                    className="text-xs font-semibold"
-                    style={{ color: "#1D9E75" }}
-                  >
+                  <div className="text-sm font-bold text-gray-900 mb-1">{brand.name}</div>
+                  <div className="text-xs font-semibold" style={{ color: "#1D9E75" }}>
                     {stats.units} unit{stats.units !== 1 ? "s" : ""} in stock
                   </div>
                   <div className="text-xs text-gray-400 mt-0.5">
-                    {stats.models} model{stats.models !== 1 ? "s" : ""} ·{" "}
-                    {fmtShort(stats.value)} value
+                    {stats.models} model{stats.models !== 1 ? "s" : ""} · {fmtShort(stats.value)} value
                   </div>
-                  <div
-                    className="mt-3 h-1 rounded-full overflow-hidden"
-                    style={{ backgroundColor: "#F3F4F6" }}
-                  >
+                  <div className="mt-3 h-1 rounded-full overflow-hidden" style={{ backgroundColor: "#F3F4F6" }}>
                     <div
                       className="h-full rounded-full"
-                      style={{
-                        backgroundColor: isSelected ? "#1D9E75" : color.text,
-                        width: "100%",
-                      }}
+                      style={{ backgroundColor: isSelected ? "#1D9E75" : color.text, width: "100%" }}
                     />
                   </div>
                 </button>
@@ -400,25 +457,16 @@ export default function InventoryClient({ brands, products, profile }: Props) {
         {selectedBrandId && selectedBrandName && (
           <div className="flex items-center justify-between">
             <p className="text-sm font-semibold text-gray-700">
-              {selectedBrandName} — {filtered.length} model
-              {filtered.length !== 1 ? "s" : ""}
+              {selectedBrandName} — {filtered.length} model{filtered.length !== 1 ? "s" : ""}
             </p>
             <button
-              onClick={() => {
-                setSelectedBrandId(null);
-                setShowProducts(false);
-              }}
+              onClick={() => { setSelectedBrandId(null); setShowProducts(false); }}
               className="text-xs font-medium flex items-center gap-1"
               style={{ color: "#6B7280" }}
             >
               Clear
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
-                <path
-                  d="M18 6L6 18M6 6l12 12"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                />
+                <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
               </svg>
             </button>
           </div>
@@ -432,19 +480,11 @@ export default function InventoryClient({ brands, products, profile }: Props) {
               style={{ backgroundColor: "#E1F5EE" }}
             >
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                <path
-                  d="M3 9l9-6 9 6v11a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
-                  stroke="#1D9E75"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
+                <path d="M3 9l9-6 9 6v11a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" stroke="#1D9E75" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
             </div>
             <p className="text-sm font-semibold text-gray-900 mb-1">
-              {products.length === 0
-                ? "No products yet"
-                : "Select a brand or filter to view products"}
+              {products.length === 0 ? "No products yet" : "Select a brand or filter to view products"}
             </p>
             <p className="text-xs text-gray-400 mb-4">
               {products.length === 0
@@ -463,53 +503,33 @@ export default function InventoryClient({ brands, products, profile }: Props) {
           </div>
         ) : filtered.length === 0 ? (
           <div className="bg-white rounded-2xl border border-gray-100 p-12 text-center">
-            <p className="text-sm font-semibold text-gray-900 mb-1">
-              No products match your filter
-            </p>
-            <p className="text-xs text-gray-400">
-              Try changing your search or filter
-            </p>
+            <p className="text-sm font-semibold text-gray-900 mb-1">No products match your filter</p>
+            <p className="text-xs text-gray-400">Try changing your search or filter</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {filtered.map((product) => {
-              const brandIndex = brands.findIndex(
-                (b) => b.id === product.brand_id,
-              );
+              const brandIndex = brands.findIndex((b) => b.id === product.brand_id);
               const color = getBrandColor(brandIndex >= 0 ? brandIndex : 0);
-              const isLow =
-                product.currentStock > 0 &&
-                product.currentStock <= product.minimum_stock;
+              const isLow = product.currentStock > 0 && product.currentStock <= product.minimum_stock;
               const isOut = product.currentStock === 0;
-              const brandName =
-                brands.find((b) => b.id === product.brand_id)?.name ?? "";
+              const brandName = brands.find((b) => b.id === product.brand_id)?.name ?? "";
 
               return (
                 <div
                   key={product.id}
                   className="bg-white rounded-2xl border overflow-hidden"
-                  style={{
-                    borderColor: isLow || isOut ? "#FED7AA" : "#F3F4F6",
-                  }}
+                  style={{ borderColor: isLow || isOut ? "#FED7AA" : "#F3F4F6" }}
                 >
                   <div
                     className="h-24 relative flex items-center justify-center text-3xl font-bold overflow-hidden"
                     style={{
-                      backgroundColor: isOut
-                        ? "#FEE2E2"
-                        : isLow
-                          ? "#FFF7ED"
-                          : color.bg,
+                      backgroundColor: isOut ? "#FEE2E2" : isLow ? "#FFF7ED" : color.bg,
                       color: isOut ? "#DC2626" : isLow ? "#F97316" : color.text,
                     }}
                   >
                     {product.image_url ? (
-                      <Image
-                        src={product.image_url}
-                        alt={product.name}
-                        fill
-                        className="object-cover"
-                      />
+                      <Image src={product.image_url} alt={product.name} fill className="object-cover" />
                     ) : (
                       product.name[0].toUpperCase()
                     )}
@@ -517,59 +537,44 @@ export default function InventoryClient({ brands, products, profile }: Props) {
 
                   <div className="p-4">
                     <div className="mb-1">
-                      <p className="text-sm font-bold text-gray-900 truncate">
-                        {product.name}
-                      </p>
-                      <p className="text-xs text-gray-400 mt-0.5">
-                        {brandName} · {product.category}
-                      </p>
+                      <p className="text-sm font-bold text-gray-900 truncate">{product.name}</p>
+                      <p className="text-xs text-gray-400 mt-0.5">{brandName} · {product.category}</p>
                     </div>
 
                     <div className="flex items-center justify-between mt-3">
-                      <span
-                        className="text-base font-bold"
-                        style={{ color: "#0F6E56" }}
-                      >
+                      <span className="text-base font-bold" style={{ color: "#0F6E56" }}>
                         {fmt(Number(product.selling_price))}
                       </span>
                       <span
                         className="text-xs font-semibold px-2.5 py-1 rounded-full"
                         style={{
-                          backgroundColor: isOut
-                            ? "#FEE2E2"
-                            : isLow
-                              ? "#FFF7ED"
-                              : "#E1F5EE",
-                          color: isOut
-                            ? "#DC2626"
-                            : isLow
-                              ? "#9A3412"
-                              : "#0F6E56",
+                          backgroundColor: isOut ? "#FEE2E2" : isLow ? "#FFF7ED" : "#E1F5EE",
+                          color: isOut ? "#DC2626" : isLow ? "#9A3412" : "#0F6E56",
                         }}
                       >
-                        {isOut
-                          ? "Out of stock"
-                          : isLow
-                            ? `${product.currentStock} left`
-                            : `${product.currentStock} in stock`}
+                        {isOut ? "Out of stock" : isLow ? `${product.currentStock} left` : `${product.currentStock} in stock`}
                       </span>
                     </div>
 
                     {isLow && (
-                      <p
-                        className="text-xs mt-1.5"
-                        style={{ color: "#C2410C" }}
-                      >
+                      <p className="text-xs mt-1.5" style={{ color: "#C2410C" }}>
                         Min: {product.minimum_stock} · Restock needed
                       </p>
                     )}
 
                     <div className="flex gap-2 mt-4">
+                      {isOwner && (
+                        <button
+                          onClick={() => openEditModal(product)}
+                          className="h-9 px-3 rounded-xl border text-xs font-semibold transition"
+                          style={{ borderColor: "#E5E7EB", color: "#374151" }}
+                        >
+                          Edit
+                        </button>
+                      )}
                       {product.is_serialized && (
                         <button
-                          onClick={() =>
-                            router.push(`/imei?product=${product.id}`)
-                          }
+                          onClick={() => router.push(`/imei?product=${product.id}`)}
                           className="flex-1 h-9 rounded-xl border text-xs font-semibold transition"
                           style={{ borderColor: "#E5E7EB", color: "#374151" }}
                         >
@@ -577,15 +582,23 @@ export default function InventoryClient({ brands, products, profile }: Props) {
                         </button>
                       )}
                       <button
-                        onClick={() =>
-                          router.push(`/inventory/stock?product=${product.id}`)
-                        }
+                        onClick={() => router.push(`/inventory/stock?product=${product.id}`)}
                         className="flex-1 h-9 rounded-xl text-xs font-semibold text-white transition"
                         style={{ backgroundColor: "#0D3B2E" }}
                       >
                         {isOut || isLow ? "+ Restock" : "+ Stock"}
                       </button>
                     </div>
+
+                    {isOwner && (
+                      <button
+                        onClick={() => setShowDeleteConfirm(product)}
+                        className="w-full mt-2 h-8 rounded-xl text-xs font-medium transition"
+                        style={{ color: "#DC2626", backgroundColor: "#FFF5F5" }}
+                      >
+                        Delete product
+                      </button>
+                    )}
                   </div>
                 </div>
               );
@@ -602,33 +615,21 @@ export default function InventoryClient({ brands, products, profile }: Props) {
         >
           <div className="w-full max-w-md bg-white rounded-2xl overflow-hidden max-h-screen overflow-y-auto">
             <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
-              <h2 className="text-base font-bold text-gray-900">
-                Add new product
-              </h2>
+              <h2 className="text-base font-bold text-gray-900">Add new product</h2>
               <button
-                onClick={() => {
-                  setShowAddProduct(false);
-                  setError(null);
-                }}
+                onClick={() => { setShowAddProduct(false); setError(null); }}
                 className="w-8 h-8 flex items-center justify-center rounded-lg"
                 style={{ color: "#6B7280" }}
               >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                  <path
-                    d="M18 6L6 18M6 6l12 12"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                  />
+                  <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
                 </svg>
               </button>
             </div>
 
             <div className="p-5 space-y-4">
               <div className="space-y-1.5">
-                <label className="text-sm font-medium text-gray-700">
-                  Product name
-                </label>
+                <label className="text-sm font-medium text-gray-700">Product name</label>
                 <input
                   type="text"
                   value={form.name}
@@ -640,29 +641,19 @@ export default function InventoryClient({ brands, products, profile }: Props) {
               </div>
 
               <div className="space-y-1.5 relative">
-                <label className="text-sm font-medium text-gray-700">
-                  Brand
-                </label>
+                <label className="text-sm font-medium text-gray-700">Brand</label>
                 <input
                   type="text"
                   value={form.brandName}
                   onChange={(e) => {
-                    setForm({
-                      ...form,
-                      brandName: e.target.value,
-                      brandId: "",
-                    });
+                    setForm({ ...form, brandName: e.target.value, brandId: "" });
                     setShowBrandSuggestions(true);
                   }}
                   onFocus={() => setShowBrandSuggestions(true)}
-                  onBlur={() =>
-                    setTimeout(() => setShowBrandSuggestions(false), 150)
-                  }
+                  onBlur={() => setTimeout(() => setShowBrandSuggestions(false), 150)}
                   placeholder="e.g. Apple, Tecno, Samsung"
                   className="w-full h-11 px-3 rounded-xl border text-sm outline-none"
-                  style={{
-                    borderColor: form.brandName ? "#1D9E75" : "#E5E7EB",
-                  }}
+                  style={{ borderColor: form.brandName ? "#1D9E75" : "#E5E7EB" }}
                 />
                 {showBrandSuggestions && brandSuggestions.length > 0 && (
                   <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-xl border border-gray-200 shadow-lg z-10 overflow-hidden">
@@ -670,11 +661,7 @@ export default function InventoryClient({ brands, products, profile }: Props) {
                       <button
                         key={b.id}
                         onMouseDown={() => {
-                          setForm({
-                            ...form,
-                            brandName: b.name,
-                            brandId: b.id,
-                          });
+                          setForm({ ...form, brandName: b.name, brandId: b.id });
                           setShowBrandSuggestions(false);
                         }}
                         className="w-full text-left px-4 py-2.5 text-sm hover:bg-gray-50 transition"
@@ -693,25 +680,18 @@ export default function InventoryClient({ brands, products, profile }: Props) {
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-sm font-medium text-gray-700">
-                  Category
-                </label>
+                <label className="text-sm font-medium text-gray-700">Category</label>
                 <select
                   value={form.category}
                   onChange={(e) => {
                     const cat = e.target.value;
-                    const isSer =
-                      cat === "Smartphones" || cat === "Smart Watches";
+                    const isSer = cat === "Smartphones" || cat === "Smart Watches";
                     setForm({ ...form, category: cat, isSerialized: isSer });
                   }}
                   className="w-full h-11 px-3 rounded-xl border text-sm outline-none bg-white"
                   style={{ borderColor: "#E5E7EB" }}
                 >
-                  {CATEGORIES.map((c) => (
-                    <option key={c} value={c}>
-                      {c}
-                    </option>
-                  ))}
+                  {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
                 </select>
               </div>
 
@@ -720,23 +700,15 @@ export default function InventoryClient({ brands, products, profile }: Props) {
                 style={{ backgroundColor: "#F9FAFB" }}
               >
                 <div>
-                  <p className="text-sm font-medium text-gray-900">
-                    Track by IMEI
-                  </p>
+                  <p className="text-sm font-medium text-gray-900">Track by IMEI</p>
                   <p className="text-xs text-gray-500 mt-0.5">
-                    {form.isSerialized
-                      ? "Each unit tracked individually"
-                      : "Tracked by quantity"}
+                    {form.isSerialized ? "Each unit tracked individually" : "Tracked by quantity"}
                   </p>
                 </div>
                 <button
-                  onClick={() =>
-                    setForm({ ...form, isSerialized: !form.isSerialized })
-                  }
+                  onClick={() => setForm({ ...form, isSerialized: !form.isSerialized })}
                   className="w-11 h-6 rounded-full transition-all relative"
-                  style={{
-                    backgroundColor: form.isSerialized ? "#1D9E75" : "#D1D5DB",
-                  }}
+                  style={{ backgroundColor: form.isSerialized ? "#1D9E75" : "#D1D5DB" }}
                 >
                   <div
                     className="w-5 h-5 bg-white rounded-full absolute top-0.5 transition-all"
@@ -747,78 +719,234 @@ export default function InventoryClient({ brands, products, profile }: Props) {
 
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
-                  <label className="text-sm font-medium text-gray-700">
-                    Cost price (₦)
-                  </label>
+                  <label className="text-sm font-medium text-gray-700">Cost price (₦)</label>
                   <input
                     type="number"
                     value={form.costPrice}
-                    onChange={(e) =>
-                      setForm({ ...form, costPrice: e.target.value })
-                    }
+                    onChange={(e) => setForm({ ...form, costPrice: e.target.value })}
                     placeholder="0"
                     className="w-full h-11 px-3 rounded-xl border text-sm outline-none"
                     style={{ borderColor: "#E5E7EB" }}
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <label className="text-sm font-medium text-gray-700">
-                    Selling price (₦)
-                  </label>
+                  <label className="text-sm font-medium text-gray-700">Selling price (₦)</label>
                   <input
                     type="number"
                     value={form.sellingPrice}
-                    onChange={(e) =>
-                      setForm({ ...form, sellingPrice: e.target.value })
-                    }
+                    onChange={(e) => setForm({ ...form, sellingPrice: e.target.value })}
                     placeholder="0"
                     className="w-full h-11 px-3 rounded-xl border text-sm outline-none"
-                    style={{
-                      borderColor: form.sellingPrice ? "#1D9E75" : "#E5E7EB",
-                    }}
+                    style={{ borderColor: form.sellingPrice ? "#1D9E75" : "#E5E7EB" }}
                   />
                 </div>
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-sm font-medium text-gray-700">
-                  Minimum stock threshold
-                </label>
+                <label className="text-sm font-medium text-gray-700">Minimum stock threshold</label>
                 <input
                   type="number"
                   value={form.minimumStock}
-                  onChange={(e) =>
-                    setForm({ ...form, minimumStock: e.target.value })
-                  }
+                  onChange={(e) => setForm({ ...form, minimumStock: e.target.value })}
                   placeholder="5"
                   className="w-full h-11 px-3 rounded-xl border text-sm outline-none"
                   style={{ borderColor: "#E5E7EB" }}
                 />
                 <p className="text-xs text-gray-400">
-                  You&apos;ll get a low stock alert when stock falls below this
-                  number
+                  You&apos;ll get a low stock alert when stock falls below this number
                 </p>
               </div>
 
               {error && (
-                <p
-                  className="text-sm px-3 py-2 rounded-xl"
-                  style={{ backgroundColor: "#FEE2E2", color: "#DC2626" }}
-                >
+                <p className="text-sm px-3 py-2 rounded-xl" style={{ backgroundColor: "#FEE2E2", color: "#DC2626" }}>
                   {error}
                 </p>
               )}
 
               <button
                 onClick={handleAddProduct}
-                disabled={
-                  loading || !form.name || !form.brandName || !form.sellingPrice
-                }
-                className="w-full h-11 rounded-xl text-sm font-semibold text-white transition disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={loading || !form.name || !form.brandName || !form.sellingPrice}
+                className="w-full h-11 rounded-xl text-sm font-semibold text-white disabled:opacity-50 disabled:cursor-not-allowed"
                 style={{ backgroundColor: "#0D3B2E" }}
               >
                 {loading ? "Adding product…" : "Add product"}
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Edit product modal ── */}
+      {showEditProduct && (
+        <div
+          className="fixed inset-0 z-50 flex items-end lg:items-center justify-center p-4"
+          style={{ backgroundColor: "rgba(0,0,0,0.4)" }}
+        >
+          <div className="w-full max-w-md bg-white rounded-2xl overflow-hidden max-h-screen overflow-y-auto">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+              <h2 className="text-base font-bold text-gray-900">Edit product</h2>
+              <button
+                onClick={() => { setShowEditProduct(null); setError(null); }}
+                className="w-8 h-8 flex items-center justify-center rounded-lg"
+                style={{ color: "#6B7280" }}
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                  <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                </svg>
+              </button>
+            </div>
+
+            <div className="p-5 space-y-4">
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium text-gray-700">Product name</label>
+                <input
+                  type="text"
+                  value={editForm.name}
+                  onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+                  className="w-full h-11 px-3 rounded-xl border text-sm outline-none"
+                  style={{ borderColor: editForm.name ? "#1D9E75" : "#E5E7EB" }}
+                />
+              </div>
+
+              <div className="space-y-1.5 relative">
+                <label className="text-sm font-medium text-gray-700">Brand</label>
+                <input
+                  type="text"
+                  value={editForm.brandName}
+                  onChange={(e) => {
+                    setEditForm({ ...editForm, brandName: e.target.value, brandId: "" });
+                    setShowEditBrandSuggestions(true);
+                  }}
+                  onFocus={() => setShowEditBrandSuggestions(true)}
+                  onBlur={() => setTimeout(() => setShowEditBrandSuggestions(false), 150)}
+                  className="w-full h-11 px-3 rounded-xl border text-sm outline-none"
+                  style={{ borderColor: editForm.brandName ? "#1D9E75" : "#E5E7EB" }}
+                />
+                {showEditBrandSuggestions && editBrandSuggestions.length > 0 && (
+                  <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-xl border border-gray-200 shadow-lg z-10 overflow-hidden">
+                    {editBrandSuggestions.map((b) => (
+                      <button
+                        key={b.id}
+                        onMouseDown={() => {
+                          setEditForm({ ...editForm, brandName: b.name, brandId: b.id });
+                          setShowEditBrandSuggestions(false);
+                        }}
+                        className="w-full text-left px-4 py-2.5 text-sm hover:bg-gray-50 transition"
+                        style={{ color: "#374151" }}
+                      >
+                        {b.name}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium text-gray-700">Category</label>
+                <select
+                  value={editForm.category}
+                  onChange={(e) => setEditForm({ ...editForm, category: e.target.value })}
+                  className="w-full h-11 px-3 rounded-xl border text-sm outline-none bg-white"
+                  style={{ borderColor: "#E5E7EB" }}
+                >
+                  {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
+                </select>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <label className="text-sm font-medium text-gray-700">Cost price (₦)</label>
+                  <input
+                    type="number"
+                    value={editForm.costPrice}
+                    onChange={(e) => setEditForm({ ...editForm, costPrice: e.target.value })}
+                    className="w-full h-11 px-3 rounded-xl border text-sm outline-none"
+                    style={{ borderColor: "#E5E7EB" }}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-sm font-medium text-gray-700">Selling price (₦)</label>
+                  <input
+                    type="number"
+                    value={editForm.sellingPrice}
+                    onChange={(e) => setEditForm({ ...editForm, sellingPrice: e.target.value })}
+                    className="w-full h-11 px-3 rounded-xl border text-sm outline-none"
+                    style={{ borderColor: editForm.sellingPrice ? "#1D9E75" : "#E5E7EB" }}
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium text-gray-700">Minimum stock threshold</label>
+                <input
+                  type="number"
+                  value={editForm.minimumStock}
+                  onChange={(e) => setEditForm({ ...editForm, minimumStock: e.target.value })}
+                  className="w-full h-11 px-3 rounded-xl border text-sm outline-none"
+                  style={{ borderColor: "#E5E7EB" }}
+                />
+              </div>
+
+              {error && (
+                <p className="text-sm px-3 py-2 rounded-xl" style={{ backgroundColor: "#FEE2E2", color: "#DC2626" }}>
+                  {error}
+                </p>
+              )}
+
+              <button
+                onClick={handleEditProduct}
+                disabled={loading || !editForm.name || !editForm.brandName || !editForm.sellingPrice}
+                className="w-full h-11 rounded-xl text-sm font-semibold text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                style={{ backgroundColor: "#0D3B2E" }}
+              >
+                {loading ? "Saving…" : "Save changes"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Delete confirm modal ── */}
+      {showDeleteConfirm && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          style={{ backgroundColor: "rgba(0,0,0,0.4)" }}
+        >
+          <div className="w-full max-w-sm bg-white rounded-2xl overflow-hidden">
+            <div className="p-6 text-center space-y-4">
+              <div
+                className="w-14 h-14 rounded-full flex items-center justify-center mx-auto"
+                style={{ backgroundColor: "#FEE2E2" }}
+              >
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                  <path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6" stroke="#DC2626" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </div>
+              <div>
+                <h2 className="text-base font-bold text-gray-900 mb-1">
+                  Delete {showDeleteConfirm.name}?
+                </h2>
+                <p className="text-sm text-gray-500">
+                  This product will be removed from your inventory. Sales history will be preserved.
+                </p>
+              </div>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowDeleteConfirm(null)}
+                  className="flex-1 h-11 rounded-xl border text-sm font-semibold"
+                  style={{ borderColor: "#E5E7EB", color: "#6B7280" }}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleDeleteProduct}
+                  disabled={deleteLoading}
+                  className="flex-1 h-11 rounded-xl text-sm font-semibold text-white disabled:opacity-50"
+                  style={{ backgroundColor: "#DC2626" }}
+                >
+                  {deleteLoading ? "Deleting…" : "Delete"}
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -830,25 +958,20 @@ export default function InventoryClient({ brands, products, profile }: Props) {
         style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
       >
         {[
-          { label: "Dashboard", href: "/dashboard", active: false },
+          { label: "Dashboard", href: "/dashboard" },
           { label: "Inventory", href: "/inventory", active: true },
-          { label: "Sales", href: "/sales", active: false },
-          { label: "Reports", href: "/reports", active: false },
-          { label: "More", href: "/settings", active: false },
+          { label: "Sales", href: "/sales" },
+          { label: "Reports", href: "/reports" },
+          { label: "More", href: "/settings" },
         ].map((item) => (
-          <a
-            key={item.href}
+          
+           <a key={item.href}
             href={item.href}
             className="flex flex-col items-center justify-center py-3 gap-1"
             style={{ color: item.active ? "#0D3B2E" : "#9CA3AF" }}
           >
             <span className="text-xs font-medium">{item.label}</span>
-            {item.active && (
-              <div
-                className="w-1 h-1 rounded-full"
-                style={{ backgroundColor: "#0D3B2E" }}
-              />
-            )}
+            {item.active && <div className="w-1 h-1 rounded-full" style={{ backgroundColor: "#0D3B2E" }} />}
           </a>
         ))}
       </nav>
