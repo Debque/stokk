@@ -52,7 +52,7 @@ export default async function IMEIPage({ searchParams }: Props) {
     const { data: items } = await supabase
       .from("stock_items")
       .select(
-        "id, imei, variant, cost_price, status, condition_notes, purchased_at, sold_at, sale_id",
+       "id, imei, variant, cost_price, status, condition_notes, purchased_at, sold_at, sale_id, image_url",
       )
       .eq("product_id", productId)
       .order("created_at", { ascending: false });
