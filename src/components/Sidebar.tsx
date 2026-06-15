@@ -19,6 +19,7 @@ const financeItems = [
 const stockItems = [
   { icon: "imei", label: "IMEI Tracker", href: "/imei" },
   { icon: "adjustments", label: "Adjustments", href: "/adjustments" },
+  { icon: "suppliers", label: "Suppliers", href: "/suppliers" },
 ];
 
 const settingsItems = [
@@ -87,6 +88,13 @@ customers: (
         <circle cx="9" cy="6" r="2" fill="currentColor"/>
         <circle cx="15" cy="12" r="2" fill="currentColor"/>
         <circle cx="9" cy="18" r="2" fill="currentColor"/>
+      </svg>
+    ),
+
+    suppliers: (
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+        <path d="M3 9l9-6 9 6v11a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+        <path d="M9 22V12h6v10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
       </svg>
     ),
     team: (
