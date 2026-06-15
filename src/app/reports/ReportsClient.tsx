@@ -82,6 +82,69 @@ export default function ReportsClient({
     : n >= 1_000 ? `₦${(n / 1_000).toFixed(0)}K`
     : `₦${n}`;
 
+    function exportCSV(filename: string, headers: string[], rows: (string | number)[][]) {
+    const csv = [
+      headers.join(","),
+      ...rows.map((row) =>
+        row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(",")
+      ),
+    ].join("\n");
+
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = filename;
+    link.click();
+    URL.revokeObjectURL(url);
+  }
+
+  function exportSalesCSV() {
+    exportCSV(
+      `stokk-sales-${monthName.replace(" ", "-")}.csv`,
+      ["Product", "Brand", "Units Sold", "Revenue (₦)", "Profit (₦)", "Margin (%)"],
+      productPerformance.map((p) => [
+        p.name,
+        p.brand,
+        p.units,
+        p.revenue,
+        p.profit,
+        p.revenue > 0 ? Math.round((p.profit / p.revenue) * 100) : 0,
+      ])
+    );
+  }
+
+  function exportExpensesCSV() {
+    exportCSV(
+      `stokk-expenses-${monthName.replace(" ", "-")}.csv`,
+      ["Title", "Category", "Amount (₦)", "Date"],
+      monthlyExpenses.map((e) => [
+        e.title,
+        e.category,
+        e.amount,
+        new Date(e.expense_date).toLocaleDateString("en-NG"),
+      ])
+    );
+  }
+
+  function exportIMEICSV() {
+    exportCSV(
+      `stokk-imei-report.csv`,
+      ["IMEI", "Product", "Brand", "Variant", "Cost (₦)", "Sold For (₦)", "Profit (₦)", "Status", "Purchase Date"],
+      imeiReport.map((item) => [
+        item.imei,
+        item.product_name,
+        item.brand_name,
+        item.variant ?? "",
+        item.cost_price,
+        item.sale?.selling_price ?? "",
+        item.sale?.profit ?? "",
+        item.status,
+        new Date(item.purchased_at).toLocaleDateString("en-NG"),
+      ])
+    );
+  }
+
   const monthName = new Date().toLocaleString("en-NG", { month: "long", year: "numeric" });
   const maxWeekly = Math.max(...weeklyRevenue, 1);
   const maxProductRevenue = productPerformance[0]?.revenue ?? 1;
@@ -265,8 +328,18 @@ export default function ReportsClient({
         {/* ── SALES TAB ── */}
         {activeTab === "sales" && (
           <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
-            <div className="px-5 py-4 border-b border-gray-100">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
               <h2 className="text-sm font-semibold text-gray-900">All sales — {monthName}</h2>
+              <button
+                onClick={exportSalesCSV}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold"
+                style={{ backgroundColor: "#E1F5EE", color: "#0F6E56" }}
+              >
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
+                  <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+                Export CSV
+              </button>
             </div>
             {productPerformance.length === 0 ? (
               <div className="p-12 text-center">
@@ -320,8 +393,18 @@ export default function ReportsClient({
         {/* ── IMEI TAB ── */}
         {activeTab === "imei" && (
           <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
-            <div className="px-5 py-4 border-b border-gray-100">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
               <h2 className="text-sm font-semibold text-gray-900">IMEI report — all units</h2>
+              <button
+                onClick={exportIMEICSV}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold"
+                style={{ backgroundColor: "#E1F5EE", color: "#0F6E56" }}
+              >
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
+                  <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+                Export CSV
+              </button>
             </div>
             {imeiReport.length === 0 ? (
               <div className="p-12 text-center">
@@ -425,9 +508,19 @@ export default function ReportsClient({
 
             {/* Expense list */}
             <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
-              <div className="px-5 py-4 border-b border-gray-100">
-                <h2 className="text-sm font-semibold text-gray-900">All expenses — {monthName}</h2>
-              </div>
+              <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+              <h2 className="text-sm font-semibold text-gray-900">All expenses — {monthName}</h2>
+              <button
+                onClick={exportExpensesCSV}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold"
+                style={{ backgroundColor: "#E1F5EE", color: "#0F6E56" }}
+              >
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
+                  <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+                Export CSV
+              </button>
+            </div>
               {monthlyExpenses.length === 0 ? (
                 <div className="p-12 text-center">
                   <p className="text-sm text-gray-400">No expenses recorded this month</p>
