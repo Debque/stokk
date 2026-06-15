@@ -27,6 +27,8 @@ export default function SettingsClient({ profile, email }: Props) {
   const [passwordLoading, setPasswordLoading] = useState(false);
   const [passwordError, setPasswordError] = useState<string | null>(null);
   const [passwordSuccess, setPasswordSuccess] = useState(false);
+  const [summaryLoading, setSummaryLoading] = useState(false);
+  const [summarySuccess, setSummarySuccess] = useState(false);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -79,6 +81,25 @@ export default function SettingsClient({ profile, email }: Props) {
       setTimeout(() => setPasswordSuccess(false), 4000);
     }
     setPasswordLoading(false);
+  }
+
+  async function handleSendSummary() {
+    setSummaryLoading(true);
+    try {
+      const response = await fetch("/api/summary", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, storeName: profile.store_name }),
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error);
+      setSummarySuccess(true);
+      setTimeout(() => setSummarySuccess(false), 4000);
+    } catch (err: unknown) {
+      console.error(err);
+    } finally {
+      setSummaryLoading(false);
+    }
   }
 
   const initials = profile.full_name
@@ -353,6 +374,37 @@ export default function SettingsClient({ profile, email }: Props) {
           </div>
         </div>
 
+{/* Summary email */}
+        <div className="bg-white rounded-2xl border border-gray-100 p-5">
+          <p className="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-4">Reports</p>
+          {summarySuccess && (
+            <div className="mb-3 p-3 rounded-xl text-sm font-medium" style={{ backgroundColor: "#DCFCE7", color: "#14532D" }}>
+              Summary email sent to {email}
+            </div>
+          )}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ backgroundColor: "#E1F5EE" }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                  <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" stroke="#1D9E75" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M22 6l-10 7L2 6" stroke="#1D9E75" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-gray-900">Daily summary email</p>
+                <p className="text-xs text-gray-400">Sales, profit and low stock report</p>
+              </div>
+            </div>
+            <button
+              onClick={handleSendSummary}
+              disabled={summaryLoading}
+              className="px-3 py-1.5 rounded-lg text-xs font-semibold text-white disabled:opacity-50"
+              style={{ backgroundColor: "#0D3B2E" }}
+            >
+              {summaryLoading ? "Sending…" : "Send now"}
+            </button>
+          </div>
+        </div>
         {/* App info */}
         <div className="bg-white rounded-2xl border border-gray-100 p-5">
           <p className="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-4">
