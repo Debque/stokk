@@ -3,6 +3,7 @@ import { createSupabaseServerClient } from "@/lib/supabase-server";
 import { redirect } from "next/navigation";
 import Sidebar from "@/components/Sidebar";
 import MobileMenuButton from "@/components/MobileMenuButton";
+import NotificationBell from "@/components/NotificationBell";
 
 export default async function DashboardPage() {
   const supabase = await createSupabaseServerClient();
@@ -196,15 +197,7 @@ export default async function DashboardPage() {
             </div>
           </div>
           <div className="flex items-center gap-2">
-            {lowStockItems.length > 0 && (
-              <div
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold"
-                style={{ backgroundColor: "#FFF7ED", color: "#9A3412" }}
-              >
-                <div className="w-1.5 h-1.5 rounded-full bg-orange-500" />
-                {lowStockItems.length} alerts
-              </div>
-            )}
+            <NotificationBell />
             
              <a href="/auth/signout"
               className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white lg:hidden"
