@@ -306,7 +306,7 @@ export default function SalesClient({
               <table className="w-full text-sm">
                 <thead>
                   <tr style={{ backgroundColor: "#F9FAFB" }}>
-                    {["Product", "Type", "Qty", "Sold for", "Profit", "Customer", "Date", ""].map((h) => (
+                    {["Product", "Type", "Qty", "Sold for", "Profit", "Customer", "Date", "Actions"].map((h) => (
                       <th key={h} className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide whitespace-nowrap">
                         {h}
                       </th>
@@ -342,19 +342,34 @@ export default function SalesClient({
                           day: "numeric", month: "short", hour: "2-digit", minute: "2-digit",
                         })}
                       </td>
-                      {isOwner && (
-                        <td className="px-4 py-3">
-                          <button
-                            onClick={() => setShowDeleteSale(sale)}
-                            className="w-8 h-8 flex items-center justify-center rounded-lg transition hover:bg-red-50"
-                            style={{ color: "#DC2626" }}
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-1">
+                          
+                           <a href={`/receipt?sale=${sale.id}`}
+                            target="_blank"
+                            className="w-8 h-8 flex items-center justify-center rounded-lg transition hover:bg-gray-100"
+                            style={{ color: "#6B7280" }}
+                            title="View receipt"
                           >
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                              <path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                              <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                              <path d="M14 2v6h6M16 13H8M16 17H8M10 9H8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                             </svg>
-                          </button>
-                        </td>
-                      )}
+                          </a>
+                          {isOwner && (
+                            <button
+                              onClick={() => setShowDeleteSale(sale)}
+                              className="w-8 h-8 flex items-center justify-center rounded-lg transition hover:bg-red-50"
+                              style={{ color: "#DC2626" }}
+                              title="Delete sale"
+                            >
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                                <path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                              </svg>
+                            </button>
+                          )}
+                        </div>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
