@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
+import MobileMenuButton from "@/components/MobileMenuButton";
 
 interface Product {
   id: string;
@@ -124,8 +125,9 @@ export default function StockClient({ product, purchases, profile }: Props) {
     <div>
       {/* Top bar */}
       <div className="sticky top-0 z-10 flex items-center justify-between px-4 lg:px-6 py-4 bg-white border-b border-gray-100">
-        <div>
-          <h1 className="text-lg font-bold text-gray-900">Add Stock</h1>
+        <div className="flex items-center gap-3">
+          <MobileMenuButton />
+          <h1 className="text-lg font-bold text-gray-900 pl-10 lg:pl-0">Add Stock</h1>
           <p className="text-xs text-gray-500 mt-0.5">
             {product.brandName} {product.name}
           </p>

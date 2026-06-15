@@ -1,5 +1,6 @@
 "use client";
 
+import MobileMenuButton from "@/components/MobileMenuButton";
 import React, { useState } from "react";
 
 interface ProductPerformance {
@@ -108,9 +109,12 @@ export default function ReportsClient({
       {/* Top bar */}
       <div className="sticky top-0 z-10 bg-white border-b border-gray-100">
         <div className="flex items-center justify-between px-4 lg:px-6 py-4">
-          <div>
+          <div className="flex items-center gap-3">
+            <MobileMenuButton />
+            <div>
             <h1 className="text-lg font-bold text-gray-900">Reports & Analytics</h1>
             <p className="text-xs text-gray-500 mt-0.5">{profile.store_name} · {monthName}</p>
+            </div>
           </div>
         </div>
 

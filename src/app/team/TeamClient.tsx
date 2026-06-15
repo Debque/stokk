@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
+import MobileMenuButton from "@/components/MobileMenuButton";
 
 interface TeamMember {
   id: string;
@@ -135,11 +136,14 @@ export default function TeamClient({ teamMembers, currentUserId, profile }: Prop
     <div>
       {/* Top bar */}
       <div className="sticky top-0 z-10 flex items-center justify-between px-4 lg:px-6 py-4 bg-white border-b border-gray-100">
-        <div>
+        <div className="flex items-center gap-3">
+          <MobileMenuButton />
+          <div>
           <h1 className="text-lg font-bold text-gray-900">Team</h1>
           <p className="text-xs text-gray-500 mt-0.5">
             {teamMembers.length} member{teamMembers.length !== 1 ? "s" : ""} · {profile.store_name}
           </p>
+          </div>
         </div>
         <button
           onClick={() => setShowInvite(true)}

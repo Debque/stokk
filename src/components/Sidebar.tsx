@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 
@@ -22,6 +22,14 @@ const stockItems = [
 
 const settingsItems = [
   { icon: "team", label: "Team", href: "/team" },
+  { icon: "settings", label: "Settings", href: "/settings" },
+];
+
+const attendantStockItems = [
+  { icon: "imei", label: "IMEI Tracker", href: "/imei" },
+];
+
+const attendantSettingsItems = [
   { icon: "settings", label: "Settings", href: "/settings" },
 ];
 
@@ -104,8 +112,6 @@ function NavIcon({ icon }: { icon: string }) {
   return icons[icon] || null;
 }
 
-// ── Declared OUTSIDE the main component so they don't recreate on every render ──
-
 interface NavItemProps {
   href: string;
   icon: string;
@@ -116,16 +122,17 @@ interface NavItemProps {
   onTooltipShow: (label: string) => void;
   onTooltipHide: () => void;
   tooltip: string | null;
+  onMobileClose: () => void;
 }
 
 function NavItem({
   href, icon, label, collapsed, isActive,
-  onNavigate, onTooltipShow, onTooltipHide, tooltip,
+  onNavigate, onTooltipShow, onTooltipHide, tooltip, onMobileClose,
 }: NavItemProps) {
   return (
     <div className="relative">
       <button
-        onClick={() => onNavigate(href)}
+        onClick={() => { onNavigate(href); onMobileClose(); }}
         onMouseEnter={() => collapsed && onTooltipShow(label)}
         onMouseLeave={onTooltipHide}
         className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all text-left"
@@ -135,10 +142,7 @@ function NavItem({
           color: isActive ? "#fff" : "rgba(255,255,255,0.6)",
         }}
       >
-        <span
-          className="flex-shrink-0"
-          style={{ color: isActive ? "#5DCAA5" : "rgba(255,255,255,0.6)" }}
-        >
+        <span className="flex-shrink-0" style={{ color: isActive ? "#5DCAA5" : "rgba(255,255,255,0.6)" }}>
           <NavIcon icon={icon} />
         </span>
         {!collapsed && (
@@ -146,7 +150,6 @@ function NavItem({
         )}
       </button>
 
-      {/* Tooltip when collapsed */}
       {collapsed && tooltip === label && (
         <div
           className="absolute left-14 top-1/2 -translate-y-1/2 z-50 px-2.5 py-1.5 rounded-lg text-xs font-medium text-white whitespace-nowrap pointer-events-none"
@@ -170,24 +173,14 @@ interface SectionLabelProps {
 
 function SectionLabel({ label, collapsed }: SectionLabelProps) {
   if (collapsed) {
-    return (
-      <div
-        className="my-1 mx-3 h-px"
-        style={{ backgroundColor: "rgba(255,255,255,0.08)" }}
-      />
-    );
+    return <div className="my-1 mx-3 h-px" style={{ backgroundColor: "rgba(255,255,255,0.08)" }} />;
   }
   return (
-    <p
-      className="px-3 pt-4 pb-1 text-xs font-semibold uppercase tracking-widest"
-      style={{ color: "rgba(255,255,255,0.3)" }}
-    >
+    <p className="px-3 pt-4 pb-1 text-xs font-semibold uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.3)" }}>
       {label}
     </p>
   );
 }
-
-// ── Main sidebar component ──
 
 interface SidebarProps {
   storeName: string;
@@ -198,16 +191,31 @@ interface SidebarProps {
 export default function Sidebar({ storeName, fullName, role }: SidebarProps) {
   const router = useRouter();
   const pathname = usePathname();
-  const [collapsed, setCollapsed] = useState<boolean>(() => {
-  if (typeof window === "undefined") return false;
-  return localStorage.getItem("stokk_sidebar_collapsed") === "true";
-});
-const [tooltip, setTooltip] = useState<string | null>(null);
+  const [collapsed, setCollapsed] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [tooltip, setTooltip] = useState<string | null>(null);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      const key = `stokk_sidebar_collapsed_${role}`;
+      const saved = localStorage.getItem(key) === "true";
+      setCollapsed(saved);
+      setMounted(true);
+    }, 0);
+    return () => clearTimeout(timer);
+  }, [role]);
+
+  useEffect(() => {
+    const handler = () => setMobileOpen(true);
+    window.addEventListener("stokk:open-sidebar", handler);
+    return () => window.removeEventListener("stokk:open-sidebar", handler);
+  }, []);
 
   function toggleCollapsed() {
     const next = !collapsed;
     setCollapsed(next);
-    localStorage.setItem("stokk_sidebar_collapsed", String(next));
+    localStorage.setItem(`stokk_sidebar_collapsed_${role}`, String(next));
   }
 
   async function handleLogout() {
@@ -222,132 +230,125 @@ const [tooltip, setTooltip] = useState<string | null>(null);
     .toUpperCase()
     .slice(0, 2);
 
- const ownerFinanceItems = financeItems;
-  const ownerStockItems = stockItems;
-  const ownerSettingsItems = settingsItems;
-
-  const attendantStockItems = [
-    { icon: "imei", label: "IMEI Tracker", href: "/imei" },
-  ];
-  const attendantSettingsItems = [
-    { icon: "settings", label: "Settings", href: "/settings" },
-  ];
-
   const allNavSections = role === "owner"
     ? [
         { items: navItems, section: null },
-        { items: ownerFinanceItems, section: "Finance" },
-        { items: ownerStockItems, section: "Stock" },
-        { items: ownerSettingsItems, section: "Settings" },
+        { items: financeItems, section: "Finance" },
+        { items: stockItems, section: "Stock" },
+        { items: settingsItems, section: "Settings" },
       ]
     : [
         { items: navItems, section: null },
         { items: attendantStockItems, section: "Stock" },
         { items: attendantSettingsItems, section: "Settings" },
       ];
+
   return (
-    <aside
-      className="flex flex-col h-screen sticky top-0 transition-all duration-200 flex-shrink-0"
-      style={{
-        width: collapsed ? "64px" : "210px",
-        backgroundColor: "#0D3B2E",
-        borderRight: "1px solid rgba(255,255,255,0.07)",
-      }}
-    >
-      {/* Logo */}
-      <div
-        className="flex items-center gap-3 px-4 py-5"
-        style={{ borderBottom: "1px solid rgba(255,255,255,0.08)" }}
-      >
+    <>
+      {/* Mobile backdrop */}
+      {mobileOpen && (
         <div
-          className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
-          style={{ backgroundColor: "rgba(255,255,255,0.1)" }}
-        >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-            <rect x="3" y="3" width="8" height="8" rx="2" fill="#5DCAA5" />
-            <rect x="13" y="3" width="8" height="8" rx="2" fill="#5DCAA5" opacity="0.6" />
-            <rect x="3" y="13" width="8" height="8" rx="2" fill="#5DCAA5" opacity="0.6" />
-            <rect x="13" y="13" width="8" height="8" rx="2" fill="#5DCAA5" opacity="0.3" />
-          </svg>
-        </div>
-        {!collapsed && (
-          <div className="overflow-hidden">
-            <div className="text-white text-sm font-bold tracking-tight">Stokk</div>
-            <div className="text-xs truncate" style={{ color: "#5DCAA5" }}>
-              {storeName}
-            </div>
-          </div>
-        )}
-      </div>
+          className="lg:hidden fixed inset-0 z-40 bg-black/50"
+          onClick={() => setMobileOpen(false)}
+        />
+      )}
 
-      {/* Nav */}
-      <nav className="flex-1 overflow-y-auto py-3 px-2 space-y-0.5">
-        {allNavSections.map(({ items, section }) => (
-          <React.Fragment key={section ?? "main"}>
-            {section && <SectionLabel label={section} collapsed={collapsed} />}
-            {items.map((item) => (
-              <NavItem
-                key={item.href}
-                href={item.href}
-                icon={item.icon}
-                label={item.label}
-                collapsed={collapsed}
-                isActive={pathname === item.href}
-                onNavigate={(href) => router.push(href)}
-                onTooltipShow={(label) => setTooltip(label)}
-                onTooltipHide={() => setTooltip(null)}
-                tooltip={tooltip}
-              />
-            ))}
-          </React.Fragment>
-        ))}
-      </nav>
-
-      {/* User + toggle */}
-      <div style={{ borderTop: "1px solid rgba(255,255,255,0.08)" }}>
-        <div className="px-3 py-3 flex items-center gap-3">
+     <aside
+        className={[
+          "flex flex-col h-screen transition-all duration-200 flex-shrink-0",
+          "fixed lg:sticky top-0 left-0 z-50",
+          mobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0",
+        ].join(" ")}
+        style={{
+          width: mounted ? (collapsed ? "64px" : "210px") : "210px",
+          backgroundColor: "#0D3B2E",
+          borderRight: "1px solid rgba(255,255,255,0.07)",
+        }}
+      >
+        {/* Logo */}
+        <div className="flex items-center gap-3 px-4 py-5" style={{ borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
           <div
-            className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-bold text-white"
-            style={{ backgroundColor: "#1D9E75" }}
+            className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+            style={{ backgroundColor: "rgba(255,255,255,0.1)" }}
           >
-            {initials}
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+              <rect x="3" y="3" width="8" height="8" rx="2" fill="#5DCAA5" />
+              <rect x="13" y="3" width="8" height="8" rx="2" fill="#5DCAA5" opacity="0.6" />
+              <rect x="3" y="13" width="8" height="8" rx="2" fill="#5DCAA5" opacity="0.6" />
+              <rect x="13" y="13" width="8" height="8" rx="2" fill="#5DCAA5" opacity="0.3" />
+            </svg>
           </div>
           {!collapsed && (
-            <>
-              <div className="flex-1 overflow-hidden">
-                <p className="text-xs font-semibold text-white truncate">{fullName}</p>
-                <p
-                  className="text-xs capitalize truncate"
-                  style={{ color: "rgba(255,255,255,0.45)" }}
-                >
-                  {role}
-                </p>
-              </div>
-              <button
-                onClick={handleLogout}
-                className="flex-shrink-0 p-1 rounded transition hover:opacity-80"
-                style={{ color: "rgba(255,255,255,0.4)" }}
-                title="Sign out"
-              >
-                <NavIcon icon="logout" />
-              </button>
-            </>
+            <div className="overflow-hidden">
+              <div className="text-white text-sm font-bold tracking-tight">Stokk</div>
+              <div className="text-xs truncate" style={{ color: "#5DCAA5" }}>{storeName}</div>
+            </div>
           )}
         </div>
 
-        {/* Collapse toggle */}
-        <button
-          onClick={toggleCollapsed}
-          className="w-full flex items-center justify-center py-3 transition hover:opacity-80"
-          style={{
-            borderTop: "1px solid rgba(255,255,255,0.06)",
-            color: "rgba(255,255,255,0.35)",
-          }}
-          title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-        >
-          <NavIcon icon={collapsed ? "chevron_right" : "chevron_left"} />
-        </button>
-      </div>
-    </aside>
+        {/* Nav */}
+        <nav className="flex-1 overflow-y-auto py-3 px-2 space-y-0.5">
+          {allNavSections.map(({ items, section }) => (
+            <React.Fragment key={section ?? "main"}>
+              {section && <SectionLabel label={section} collapsed={collapsed} />}
+              {items.map((item) => (
+                <NavItem
+                  key={item.href}
+                  href={item.href}
+                  icon={item.icon}
+                  label={item.label}
+                  collapsed={collapsed}
+                  isActive={pathname === item.href}
+                  onNavigate={(href) => router.push(href)}
+                  onTooltipShow={(label) => setTooltip(label)}
+                  onTooltipHide={() => setTooltip(null)}
+                  tooltip={tooltip}
+                  onMobileClose={() => setMobileOpen(false)}
+                />
+              ))}
+            </React.Fragment>
+          ))}
+        </nav>
+
+        {/* User + toggle */}
+        <div style={{ borderTop: "1px solid rgba(255,255,255,0.08)" }}>
+          <div className="px-3 py-3 flex items-center gap-3">
+            <div
+              className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-bold text-white"
+              style={{ backgroundColor: "#1D9E75" }}
+            >
+              {initials}
+            </div>
+            {!collapsed && (
+              <>
+                <div className="flex-1 overflow-hidden">
+                  <p className="text-xs font-semibold text-white truncate">{fullName}</p>
+                  <p className="text-xs capitalize truncate" style={{ color: "rgba(255,255,255,0.65)" }}>
+                    {role}
+                  </p>
+                </div>
+                <button
+                  onClick={handleLogout}
+                  className="flex-shrink-0 p-1.5 rounded-lg transition hover:opacity-80"
+                  style={{ color: "#fff", backgroundColor: "rgba(255,255,255,0.1)" }}
+                  title="Sign out"
+                >
+                  <NavIcon icon="logout" />
+                </button>
+              </>
+            )}
+          </div>
+
+          <button
+            onClick={toggleCollapsed}
+            className="w-full flex items-center justify-center py-3 transition hover:opacity-80"
+            style={{ borderTop: "1px solid rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.35)" }}
+            title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+          >
+            <NavIcon icon={collapsed ? "chevron_right" : "chevron_left"} />
+          </button>
+        </div>
+      </aside>
+    </>
   );
 }

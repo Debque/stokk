@@ -3,6 +3,7 @@
 import React, { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
+import MobileMenuButton from "@/components/MobileMenuButton";
 
 interface Product {
   id: string;
@@ -223,11 +224,14 @@ export default function SalesClient({
     <div>
       {/* Top bar */}
       <div className="sticky top-0 z-10 flex items-center justify-between px-4 lg:px-6 py-4 bg-white border-b border-gray-100">
-        <div>
+        <div className="flex items-center gap-3">
+          <MobileMenuButton />
+          <div>
           <h1 className="text-lg font-bold text-gray-900">Sales</h1>
           <p className="text-xs text-gray-500 mt-0.5">
             {recentSales.length} recent transactions
           </p>
+          </div>
         </div>
         <button
           onClick={() => setShowSaleForm(true)}

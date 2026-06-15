@@ -4,6 +4,7 @@ import React, { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import Image from "next/image";
+import MobileMenuButton from "@/components/MobileMenuButton";
 
 interface Brand {
   id: string;
@@ -71,7 +72,9 @@ export default function InventoryClient({ brands, products, profile }: Props) {
   const [selectedBrandId, setSelectedBrandId] = useState<string | null>(null);
   const [showProducts, setShowProducts] = useState(false);
   const [search, setSearch] = useState("");
-  const [filterStatus, setFilterStatus] = useState<"all" | "low" | "out">("all");
+  const [filterStatus, setFilterStatus] = useState<"all" | "low" | "out">(
+    "all",
+  );
   const [showAddProduct, setShowAddProduct] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -93,8 +96,13 @@ export default function InventoryClient({ brands, products, profile }: Props) {
   const filtered = useMemo(() => {
     return products.filter((p) => {
       if (selectedBrandId && p.brand_id !== selectedBrandId) return false;
-      if (search && !p.name.toLowerCase().includes(search.toLowerCase())) return false;
-      if (filterStatus === "low" && !(p.currentStock > 0 && p.currentStock <= p.minimum_stock)) return false;
+      if (search && !p.name.toLowerCase().includes(search.toLowerCase()))
+        return false;
+      if (
+        filterStatus === "low" &&
+        !(p.currentStock > 0 && p.currentStock <= p.minimum_stock)
+      )
+        return false;
       if (filterStatus === "out" && p.currentStock !== 0) return false;
       return true;
     });
@@ -102,7 +110,10 @@ export default function InventoryClient({ brands, products, profile }: Props) {
 
   // ── Brand stats ────────────────────────────────────────────────────────────
   const brandStats = useMemo(() => {
-    const map: Record<string, { units: number; value: number; models: number }> = {};
+    const map: Record<
+      string,
+      { units: number; value: number; models: number }
+    > = {};
     products.forEach((p) => {
       if (!p.brand_id) return;
       if (!map[p.brand_id]) map[p.brand_id] = { units: 0, value: 0, models: 0 };
@@ -114,14 +125,15 @@ export default function InventoryClient({ brands, products, profile }: Props) {
   }, [products]);
 
   // ── Brand suggestions for autocomplete ────────────────────────────────────
-  const brandSuggestions = brands.filter((b) =>
-    b.name.toLowerCase().includes(form.brandName.toLowerCase()) &&
-    form.brandName.length > 0
+  const brandSuggestions = brands.filter(
+    (b) =>
+      b.name.toLowerCase().includes(form.brandName.toLowerCase()) &&
+      form.brandName.length > 0,
   );
 
   // ── Counts ─────────────────────────────────────────────────────────────────
   const lowStockCount = products.filter(
-    (p) => p.currentStock > 0 && p.currentStock <= p.minimum_stock
+    (p) => p.currentStock > 0 && p.currentStock <= p.minimum_stock,
   ).length;
 
   const totalProducts = products.length;
@@ -129,9 +141,11 @@ export default function InventoryClient({ brands, products, profile }: Props) {
   // ── Format currency ────────────────────────────────────────────────────────
   const fmt = (n: number) => `₦${Math.round(n).toLocaleString("en-NG")}`;
   const fmtShort = (n: number) =>
-    n >= 1_000_000 ? `₦${(n / 1_000_000).toFixed(1)}M`
-    : n >= 1_000 ? `₦${(n / 1_000).toFixed(0)}K`
-    : `₦${n}`;
+    n >= 1_000_000
+      ? `₦${(n / 1_000_000).toFixed(1)}M`
+      : n >= 1_000
+        ? `₦${(n / 1_000).toFixed(0)}K`
+        : `₦${n}`;
 
   // ── Add product handler ────────────────────────────────────────────────────
   async function handleAddProduct() {
@@ -205,11 +219,15 @@ export default function InventoryClient({ brands, products, profile }: Props) {
     <div>
       {/* ── Top bar ── */}
       <div className="sticky top-0 z-10 flex items-center justify-between px-4 lg:px-6 py-4 bg-white border-b border-gray-100">
-        <div>
-          <h1 className="text-lg font-bold text-gray-900">Inventory</h1>
-          <p className="text-xs text-gray-500 mt-0.5">
-            {totalProducts} product{totalProducts !== 1 ? "s" : ""} · {brands.length} brand{brands.length !== 1 ? "s" : ""}
-          </p>
+        <div className="flex items-center gap-3">
+          <MobileMenuButton />
+          <div>
+            <h1 className="text-lg font-bold text-gray-900">Inventory</h1>
+            <p className="text-xs text-gray-500 mt-0.5">
+              {totalProducts} product{totalProducts !== 1 ? "s" : ""} ·{" "}
+              {brands.length} brand{brands.length !== 1 ? "s" : ""}
+            </p>
+          </div>
         </div>
         {isOwner && (
           <button
@@ -218,7 +236,12 @@ export default function InventoryClient({ brands, products, profile }: Props) {
             style={{ backgroundColor: "#0D3B2E" }}
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-              <path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"/>
+              <path
+                d="M12 5v14M5 12h14"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+              />
             </svg>
             Add product
           </button>
@@ -226,7 +249,6 @@ export default function InventoryClient({ brands, products, profile }: Props) {
       </div>
 
       <div className="p-4 lg:p-6 space-y-5">
-
         {/* ── Filters at top ── */}
         <div className="flex flex-wrap items-center gap-2">
           <div
@@ -234,8 +256,13 @@ export default function InventoryClient({ brands, products, profile }: Props) {
             style={{ borderColor: "#E5E7EB" }}
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-              <circle cx="11" cy="11" r="8" stroke="#9CA3AF" strokeWidth="2"/>
-              <path d="M21 21l-4.35-4.35" stroke="#9CA3AF" strokeWidth="2" strokeLinecap="round"/>
+              <circle cx="11" cy="11" r="8" stroke="#9CA3AF" strokeWidth="2" />
+              <path
+                d="M21 21l-4.35-4.35"
+                stroke="#9CA3AF"
+                strokeWidth="2"
+                strokeLinecap="round"
+              />
             </svg>
             <input
               type="text"
@@ -253,7 +280,11 @@ export default function InventoryClient({ brands, products, profile }: Props) {
             <button
               key={status}
               onClick={() => {
-                if (filterStatus === status && showProducts && !selectedBrandId) {
+                if (
+                  filterStatus === status &&
+                  showProducts &&
+                  !selectedBrandId
+                ) {
                   setShowProducts(false);
                 } else {
                   setFilterStatus(status as "all" | "low" | "out");
@@ -263,22 +294,37 @@ export default function InventoryClient({ brands, products, profile }: Props) {
               }}
               className="h-10 px-4 rounded-xl text-sm font-medium border transition"
               style={{
-                backgroundColor: filterStatus === status && showProducts && !selectedBrandId
-                  ? status === "low" ? "#FFF7ED" : status === "out" ? "#FEE2E2" : "#E1F5EE"
-                  : "#fff",
-                borderColor: filterStatus === status && showProducts && !selectedBrandId
-                  ? status === "low" ? "#FED7AA" : status === "out" ? "#FCA5A5" : "#5DCAA5"
-                  : "#E5E7EB",
-                color: filterStatus === status && showProducts && !selectedBrandId
-                  ? status === "low" ? "#9A3412" : status === "out" ? "#7F1D1D" : "#0F6E56"
-                  : "#6B7280",
+                backgroundColor:
+                  filterStatus === status && showProducts && !selectedBrandId
+                    ? status === "low"
+                      ? "#FFF7ED"
+                      : status === "out"
+                        ? "#FEE2E2"
+                        : "#E1F5EE"
+                    : "#fff",
+                borderColor:
+                  filterStatus === status && showProducts && !selectedBrandId
+                    ? status === "low"
+                      ? "#FED7AA"
+                      : status === "out"
+                        ? "#FCA5A5"
+                        : "#5DCAA5"
+                    : "#E5E7EB",
+                color:
+                  filterStatus === status && showProducts && !selectedBrandId
+                    ? status === "low"
+                      ? "#9A3412"
+                      : status === "out"
+                        ? "#7F1D1D"
+                        : "#0F6E56"
+                    : "#6B7280",
               }}
             >
               {status === "all"
                 ? `All (${products.length})`
                 : status === "low"
-                ? `Low stock (${lowStockCount})`
-                : "Out of stock"}
+                  ? `Low stock (${lowStockCount})`
+                  : "Out of stock"}
             </button>
           ))}
         </div>
@@ -287,7 +333,11 @@ export default function InventoryClient({ brands, products, profile }: Props) {
         {brands.length > 0 && (
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
             {brands.map((brand, i) => {
-              const stats = brandStats[brand.id] ?? { units: 0, value: 0, models: 0 };
+              const stats = brandStats[brand.id] ?? {
+                units: 0,
+                value: 0,
+                models: 0,
+              };
               const color = getBrandColor(i);
               const isSelected = selectedBrandId === brand.id;
               return (
@@ -315,12 +365,18 @@ export default function InventoryClient({ brands, products, profile }: Props) {
                   >
                     {brand.name[0].toUpperCase()}
                   </div>
-                  <div className="text-sm font-bold text-gray-900 mb-1">{brand.name}</div>
-                  <div className="text-xs font-semibold" style={{ color: "#1D9E75" }}>
+                  <div className="text-sm font-bold text-gray-900 mb-1">
+                    {brand.name}
+                  </div>
+                  <div
+                    className="text-xs font-semibold"
+                    style={{ color: "#1D9E75" }}
+                  >
                     {stats.units} unit{stats.units !== 1 ? "s" : ""} in stock
                   </div>
                   <div className="text-xs text-gray-400 mt-0.5">
-                    {stats.models} model{stats.models !== 1 ? "s" : ""} · {fmtShort(stats.value)} value
+                    {stats.models} model{stats.models !== 1 ? "s" : ""} ·{" "}
+                    {fmtShort(stats.value)} value
                   </div>
                   <div
                     className="mt-3 h-1 rounded-full overflow-hidden"
@@ -344,16 +400,25 @@ export default function InventoryClient({ brands, products, profile }: Props) {
         {selectedBrandId && selectedBrandName && (
           <div className="flex items-center justify-between">
             <p className="text-sm font-semibold text-gray-700">
-              {selectedBrandName} — {filtered.length} model{filtered.length !== 1 ? "s" : ""}
+              {selectedBrandName} — {filtered.length} model
+              {filtered.length !== 1 ? "s" : ""}
             </p>
             <button
-              onClick={() => { setSelectedBrandId(null); setShowProducts(false); }}
+              onClick={() => {
+                setSelectedBrandId(null);
+                setShowProducts(false);
+              }}
               className="text-xs font-medium flex items-center gap-1"
               style={{ color: "#6B7280" }}
             >
               Clear
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
-                <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                <path
+                  d="M18 6L6 18M6 6l12 12"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                />
               </svg>
             </button>
           </div>
@@ -367,11 +432,19 @@ export default function InventoryClient({ brands, products, profile }: Props) {
               style={{ backgroundColor: "#E1F5EE" }}
             >
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                <path d="M3 9l9-6 9 6v11a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" stroke="#1D9E75" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <path
+                  d="M3 9l9-6 9 6v11a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
+                  stroke="#1D9E75"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
               </svg>
             </div>
             <p className="text-sm font-semibold text-gray-900 mb-1">
-              {products.length === 0 ? "No products yet" : "Select a brand or filter to view products"}
+              {products.length === 0
+                ? "No products yet"
+                : "Select a brand or filter to view products"}
             </p>
             <p className="text-xs text-gray-400 mb-4">
               {products.length === 0
@@ -390,33 +463,53 @@ export default function InventoryClient({ brands, products, profile }: Props) {
           </div>
         ) : filtered.length === 0 ? (
           <div className="bg-white rounded-2xl border border-gray-100 p-12 text-center">
-            <p className="text-sm font-semibold text-gray-900 mb-1">No products match your filter</p>
-            <p className="text-xs text-gray-400">Try changing your search or filter</p>
+            <p className="text-sm font-semibold text-gray-900 mb-1">
+              No products match your filter
+            </p>
+            <p className="text-xs text-gray-400">
+              Try changing your search or filter
+            </p>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {filtered.map((product) => {
-              const brandIndex = brands.findIndex((b) => b.id === product.brand_id);
+              const brandIndex = brands.findIndex(
+                (b) => b.id === product.brand_id,
+              );
               const color = getBrandColor(brandIndex >= 0 ? brandIndex : 0);
-              const isLow = product.currentStock > 0 && product.currentStock <= product.minimum_stock;
+              const isLow =
+                product.currentStock > 0 &&
+                product.currentStock <= product.minimum_stock;
               const isOut = product.currentStock === 0;
-              const brandName = brands.find((b) => b.id === product.brand_id)?.name ?? "";
+              const brandName =
+                brands.find((b) => b.id === product.brand_id)?.name ?? "";
 
               return (
                 <div
                   key={product.id}
                   className="bg-white rounded-2xl border overflow-hidden"
-                  style={{ borderColor: isLow || isOut ? "#FED7AA" : "#F3F4F6" }}
+                  style={{
+                    borderColor: isLow || isOut ? "#FED7AA" : "#F3F4F6",
+                  }}
                 >
                   <div
                     className="h-24 relative flex items-center justify-center text-3xl font-bold overflow-hidden"
                     style={{
-                      backgroundColor: isOut ? "#FEE2E2" : isLow ? "#FFF7ED" : color.bg,
+                      backgroundColor: isOut
+                        ? "#FEE2E2"
+                        : isLow
+                          ? "#FFF7ED"
+                          : color.bg,
                       color: isOut ? "#DC2626" : isLow ? "#F97316" : color.text,
                     }}
                   >
                     {product.image_url ? (
-                      <Image src={product.image_url} alt={product.name} fill className="object-cover" />
+                      <Image
+                        src={product.image_url}
+                        alt={product.name}
+                        fill
+                        className="object-cover"
+                      />
                     ) : (
                       product.name[0].toUpperCase()
                     )}
@@ -424,27 +517,49 @@ export default function InventoryClient({ brands, products, profile }: Props) {
 
                   <div className="p-4">
                     <div className="mb-1">
-                      <p className="text-sm font-bold text-gray-900 truncate">{product.name}</p>
-                      <p className="text-xs text-gray-400 mt-0.5">{brandName} · {product.category}</p>
+                      <p className="text-sm font-bold text-gray-900 truncate">
+                        {product.name}
+                      </p>
+                      <p className="text-xs text-gray-400 mt-0.5">
+                        {brandName} · {product.category}
+                      </p>
                     </div>
 
                     <div className="flex items-center justify-between mt-3">
-                      <span className="text-base font-bold" style={{ color: "#0F6E56" }}>
+                      <span
+                        className="text-base font-bold"
+                        style={{ color: "#0F6E56" }}
+                      >
                         {fmt(Number(product.selling_price))}
                       </span>
                       <span
                         className="text-xs font-semibold px-2.5 py-1 rounded-full"
                         style={{
-                          backgroundColor: isOut ? "#FEE2E2" : isLow ? "#FFF7ED" : "#E1F5EE",
-                          color: isOut ? "#DC2626" : isLow ? "#9A3412" : "#0F6E56",
+                          backgroundColor: isOut
+                            ? "#FEE2E2"
+                            : isLow
+                              ? "#FFF7ED"
+                              : "#E1F5EE",
+                          color: isOut
+                            ? "#DC2626"
+                            : isLow
+                              ? "#9A3412"
+                              : "#0F6E56",
                         }}
                       >
-                        {isOut ? "Out of stock" : isLow ? `${product.currentStock} left` : `${product.currentStock} in stock`}
+                        {isOut
+                          ? "Out of stock"
+                          : isLow
+                            ? `${product.currentStock} left`
+                            : `${product.currentStock} in stock`}
                       </span>
                     </div>
 
                     {isLow && (
-                      <p className="text-xs mt-1.5" style={{ color: "#C2410C" }}>
+                      <p
+                        className="text-xs mt-1.5"
+                        style={{ color: "#C2410C" }}
+                      >
                         Min: {product.minimum_stock} · Restock needed
                       </p>
                     )}
@@ -452,7 +567,9 @@ export default function InventoryClient({ brands, products, profile }: Props) {
                     <div className="flex gap-2 mt-4">
                       {product.is_serialized && (
                         <button
-                          onClick={() => router.push(`/imei?product=${product.id}`)}
+                          onClick={() =>
+                            router.push(`/imei?product=${product.id}`)
+                          }
                           className="flex-1 h-9 rounded-xl border text-xs font-semibold transition"
                           style={{ borderColor: "#E5E7EB", color: "#374151" }}
                         >
@@ -460,7 +577,9 @@ export default function InventoryClient({ brands, products, profile }: Props) {
                         </button>
                       )}
                       <button
-                        onClick={() => router.push(`/inventory/stock?product=${product.id}`)}
+                        onClick={() =>
+                          router.push(`/inventory/stock?product=${product.id}`)
+                        }
                         className="flex-1 h-9 rounded-xl text-xs font-semibold text-white transition"
                         style={{ backgroundColor: "#0D3B2E" }}
                       >
@@ -483,22 +602,33 @@ export default function InventoryClient({ brands, products, profile }: Props) {
         >
           <div className="w-full max-w-md bg-white rounded-2xl overflow-hidden max-h-screen overflow-y-auto">
             <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
-              <h2 className="text-base font-bold text-gray-900">Add new product</h2>
+              <h2 className="text-base font-bold text-gray-900">
+                Add new product
+              </h2>
               <button
-                onClick={() => { setShowAddProduct(false); setError(null); }}
+                onClick={() => {
+                  setShowAddProduct(false);
+                  setError(null);
+                }}
                 className="w-8 h-8 flex items-center justify-center rounded-lg"
                 style={{ color: "#6B7280" }}
               >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                  <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                  <path
+                    d="M18 6L6 18M6 6l12 12"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                  />
                 </svg>
               </button>
             </div>
 
             <div className="p-5 space-y-4">
-
               <div className="space-y-1.5">
-                <label className="text-sm font-medium text-gray-700">Product name</label>
+                <label className="text-sm font-medium text-gray-700">
+                  Product name
+                </label>
                 <input
                   type="text"
                   value={form.name}
@@ -510,19 +640,29 @@ export default function InventoryClient({ brands, products, profile }: Props) {
               </div>
 
               <div className="space-y-1.5 relative">
-                <label className="text-sm font-medium text-gray-700">Brand</label>
+                <label className="text-sm font-medium text-gray-700">
+                  Brand
+                </label>
                 <input
                   type="text"
                   value={form.brandName}
                   onChange={(e) => {
-                    setForm({ ...form, brandName: e.target.value, brandId: "" });
+                    setForm({
+                      ...form,
+                      brandName: e.target.value,
+                      brandId: "",
+                    });
                     setShowBrandSuggestions(true);
                   }}
                   onFocus={() => setShowBrandSuggestions(true)}
-                  onBlur={() => setTimeout(() => setShowBrandSuggestions(false), 150)}
+                  onBlur={() =>
+                    setTimeout(() => setShowBrandSuggestions(false), 150)
+                  }
                   placeholder="e.g. Apple, Tecno, Samsung"
                   className="w-full h-11 px-3 rounded-xl border text-sm outline-none"
-                  style={{ borderColor: form.brandName ? "#1D9E75" : "#E5E7EB" }}
+                  style={{
+                    borderColor: form.brandName ? "#1D9E75" : "#E5E7EB",
+                  }}
                 />
                 {showBrandSuggestions && brandSuggestions.length > 0 && (
                   <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-xl border border-gray-200 shadow-lg z-10 overflow-hidden">
@@ -530,7 +670,11 @@ export default function InventoryClient({ brands, products, profile }: Props) {
                       <button
                         key={b.id}
                         onMouseDown={() => {
-                          setForm({ ...form, brandName: b.name, brandId: b.id });
+                          setForm({
+                            ...form,
+                            brandName: b.name,
+                            brandId: b.id,
+                          });
                           setShowBrandSuggestions(false);
                         }}
                         className="w-full text-left px-4 py-2.5 text-sm hover:bg-gray-50 transition"
@@ -549,19 +693,24 @@ export default function InventoryClient({ brands, products, profile }: Props) {
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-sm font-medium text-gray-700">Category</label>
+                <label className="text-sm font-medium text-gray-700">
+                  Category
+                </label>
                 <select
                   value={form.category}
                   onChange={(e) => {
                     const cat = e.target.value;
-                    const isSer = cat === "Smartphones" || cat === "Smart Watches";
+                    const isSer =
+                      cat === "Smartphones" || cat === "Smart Watches";
                     setForm({ ...form, category: cat, isSerialized: isSer });
                   }}
                   className="w-full h-11 px-3 rounded-xl border text-sm outline-none bg-white"
                   style={{ borderColor: "#E5E7EB" }}
                 >
                   {CATEGORIES.map((c) => (
-                    <option key={c} value={c}>{c}</option>
+                    <option key={c} value={c}>
+                      {c}
+                    </option>
                   ))}
                 </select>
               </div>
@@ -571,15 +720,23 @@ export default function InventoryClient({ brands, products, profile }: Props) {
                 style={{ backgroundColor: "#F9FAFB" }}
               >
                 <div>
-                  <p className="text-sm font-medium text-gray-900">Track by IMEI</p>
+                  <p className="text-sm font-medium text-gray-900">
+                    Track by IMEI
+                  </p>
                   <p className="text-xs text-gray-500 mt-0.5">
-                    {form.isSerialized ? "Each unit tracked individually" : "Tracked by quantity"}
+                    {form.isSerialized
+                      ? "Each unit tracked individually"
+                      : "Tracked by quantity"}
                   </p>
                 </div>
                 <button
-                  onClick={() => setForm({ ...form, isSerialized: !form.isSerialized })}
+                  onClick={() =>
+                    setForm({ ...form, isSerialized: !form.isSerialized })
+                  }
                   className="w-11 h-6 rounded-full transition-all relative"
-                  style={{ backgroundColor: form.isSerialized ? "#1D9E75" : "#D1D5DB" }}
+                  style={{
+                    backgroundColor: form.isSerialized ? "#1D9E75" : "#D1D5DB",
+                  }}
                 >
                   <div
                     className="w-5 h-5 bg-white rounded-full absolute top-0.5 transition-all"
@@ -590,41 +747,56 @@ export default function InventoryClient({ brands, products, profile }: Props) {
 
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
-                  <label className="text-sm font-medium text-gray-700">Cost price (₦)</label>
+                  <label className="text-sm font-medium text-gray-700">
+                    Cost price (₦)
+                  </label>
                   <input
                     type="number"
                     value={form.costPrice}
-                    onChange={(e) => setForm({ ...form, costPrice: e.target.value })}
+                    onChange={(e) =>
+                      setForm({ ...form, costPrice: e.target.value })
+                    }
                     placeholder="0"
                     className="w-full h-11 px-3 rounded-xl border text-sm outline-none"
                     style={{ borderColor: "#E5E7EB" }}
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <label className="text-sm font-medium text-gray-700">Selling price (₦)</label>
+                  <label className="text-sm font-medium text-gray-700">
+                    Selling price (₦)
+                  </label>
                   <input
                     type="number"
                     value={form.sellingPrice}
-                    onChange={(e) => setForm({ ...form, sellingPrice: e.target.value })}
+                    onChange={(e) =>
+                      setForm({ ...form, sellingPrice: e.target.value })
+                    }
                     placeholder="0"
                     className="w-full h-11 px-3 rounded-xl border text-sm outline-none"
-                    style={{ borderColor: form.sellingPrice ? "#1D9E75" : "#E5E7EB" }}
+                    style={{
+                      borderColor: form.sellingPrice ? "#1D9E75" : "#E5E7EB",
+                    }}
                   />
                 </div>
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-sm font-medium text-gray-700">Minimum stock threshold</label>
+                <label className="text-sm font-medium text-gray-700">
+                  Minimum stock threshold
+                </label>
                 <input
                   type="number"
                   value={form.minimumStock}
-                  onChange={(e) => setForm({ ...form, minimumStock: e.target.value })}
+                  onChange={(e) =>
+                    setForm({ ...form, minimumStock: e.target.value })
+                  }
                   placeholder="5"
                   className="w-full h-11 px-3 rounded-xl border text-sm outline-none"
                   style={{ borderColor: "#E5E7EB" }}
                 />
                 <p className="text-xs text-gray-400">
-                  You&apos;ll get a low stock alert when stock falls below this number
+                  You&apos;ll get a low stock alert when stock falls below this
+                  number
                 </p>
               </div>
 
@@ -639,7 +811,9 @@ export default function InventoryClient({ brands, products, profile }: Props) {
 
               <button
                 onClick={handleAddProduct}
-                disabled={loading || !form.name || !form.brandName || !form.sellingPrice}
+                disabled={
+                  loading || !form.name || !form.brandName || !form.sellingPrice
+                }
                 className="w-full h-11 rounded-xl text-sm font-semibold text-white transition disabled:opacity-50 disabled:cursor-not-allowed"
                 style={{ backgroundColor: "#0D3B2E" }}
               >
@@ -662,15 +836,18 @@ export default function InventoryClient({ brands, products, profile }: Props) {
           { label: "Reports", href: "/reports", active: false },
           { label: "More", href: "/settings", active: false },
         ].map((item) => (
-          
-            <a key={item.href}
+          <a
+            key={item.href}
             href={item.href}
             className="flex flex-col items-center justify-center py-3 gap-1"
             style={{ color: item.active ? "#0D3B2E" : "#9CA3AF" }}
           >
             <span className="text-xs font-medium">{item.label}</span>
             {item.active && (
-              <div className="w-1 h-1 rounded-full" style={{ backgroundColor: "#0D3B2E" }} />
+              <div
+                className="w-1 h-1 rounded-full"
+                style={{ backgroundColor: "#0D3B2E" }}
+              />
             )}
           </a>
         ))}
