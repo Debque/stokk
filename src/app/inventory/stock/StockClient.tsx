@@ -33,16 +33,22 @@ interface Profile {
   full_name: string;
 }
 
+interface Supplier {
+  id: string;
+  name: string;
+}
+
 interface Props {
   product: Product;
   purchases: Purchase[];
+  suppliers: Supplier[];
   profile: Profile;
 }
-
-export default function StockClient({ product, purchases, profile }: Props) {
+export default function StockClient({ product, purchases, suppliers, profile }: Props) {
   const router = useRouter();
 
   const [showForm, setShowForm] = useState(false);
+  const [showSupplierSuggestions, setShowSupplierSuggestions] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -270,6 +276,18 @@ export default function StockClient({ product, purchases, profile }: Props) {
                     </tr>
                   ))}
                 </tbody>
+                <tfoot>
+                  <tr style={{ backgroundColor: "#F9FAFB", borderTop: "2px solid #E5E7EB" }}>
+                    <td className="px-4 py-3 text-xs font-bold text-gray-700">
+                      Total: {purchases.reduce((sum, p) => sum + p.quantity, 0)} units
+                    </td>
+                    <td className="px-4 py-3 text-xs font-bold text-gray-700">—</td>
+                    <td className="px-4 py-3 text-xs font-bold text-gray-700">
+                      {fmt(purchases.reduce((sum, p) => sum + Number(p.total_cost), 0))}
+                    </td>
+                    <td className="px-4 py-3" colSpan={3}/>
+                  </tr>
+                </tfoot>
               </table>
             </div>
           )}
@@ -348,16 +366,36 @@ export default function StockClient({ product, purchases, profile }: Props) {
               )}
 
               {/* Supplier */}
-              <div className="space-y-1.5">
+              <div className="space-y-1.5 relative">
                 <label className="text-sm font-medium text-gray-700">Supplier (optional)</label>
                 <input
                   type="text"
                   value={form.supplier}
-                  onChange={(e) => setForm({ ...form, supplier: e.target.value })}
+                  onChange={(e) => { setForm({ ...form, supplier: e.target.value }); setShowSupplierSuggestions(true); }}
+                  onFocus={() => setShowSupplierSuggestions(true)}
+                  onBlur={() => setTimeout(() => setShowSupplierSuggestions(false), 150)}
                   placeholder="e.g. Slot Systems"
                   className="w-full h-11 px-3 rounded-xl border text-sm outline-none"
                   style={{ borderColor: "#E5E7EB" }}
                 />
+                {showSupplierSuggestions && suppliers.filter((s) =>
+                  s.name.toLowerCase().includes(form.supplier.toLowerCase()) && form.supplier.length > 0
+                ).length > 0 && (
+                  <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-xl border border-gray-200 shadow-lg z-10 overflow-hidden">
+                    {suppliers
+                      .filter((s) => s.name.toLowerCase().includes(form.supplier.toLowerCase()))
+                      .map((s) => (
+                        <button
+                          key={s.id}
+                          onMouseDown={() => { setForm({ ...form, supplier: s.name }); setShowSupplierSuggestions(false); }}
+                          className="w-full text-left px-4 py-2.5 text-sm hover:bg-gray-50 transition"
+                          style={{ color: "#374151" }}
+                        >
+                          {s.name}
+                        </button>
+                      ))}
+                  </div>
+                )}
               </div>
 
               {/* Date */}

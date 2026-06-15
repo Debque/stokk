@@ -52,7 +52,11 @@ export default async function StockPage({ searchParams }: Props) {
     .select("id, quantity, unit_cost, total_cost, supplier, purchased_at, notes")
     .eq("product_id", productId)
     .order("purchased_at", { ascending: false });
-
+// Fetch suppliers for autocomplete
+  const { data: suppliers } = await supabase
+    .from("suppliers")
+    .select("id, name")
+    .order("name");
   return (
     <div className="flex h-screen overflow-hidden bg-gray-100">
       <Sidebar
@@ -64,6 +68,7 @@ export default async function StockPage({ searchParams }: Props) {
         <StockClient
           product={{ ...product, brandName: brand?.name ?? "" }}
           purchases={purchases ?? []}
+          suppliers={suppliers ?? []}
           profile={profile}
         />
       </main>
