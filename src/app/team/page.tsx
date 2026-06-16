@@ -1,13 +1,15 @@
 import { createSupabaseServerClient } from "@/lib/supabase-server";
 import { createClient } from "@supabase/supabase-js";
 import { redirect } from "next/navigation";
-import Sidebar from "@/components/Sidebar";
+import PageShell from "@/components/PageShell";
 import TeamClient from "./TeamClient";
 
 export default async function TeamPage() {
   const supabase = await createSupabaseServerClient();
 
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
   const { data: profile } = await supabase
@@ -21,11 +23,11 @@ export default async function TeamPage() {
   if (profile.role !== "owner") redirect("/dashboard");
 
   // Fetch all team members (same store)
- // Use service role to fetch all team members (bypasses RLS)
+  // Use service role to fetch all team members (bypasses RLS)
   const adminClient = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    { auth: { autoRefreshToken: false, persistSession: false } }
+    { auth: { autoRefreshToken: false, persistSession: false } },
   );
 
   const { data: teamMembers } = await adminClient
@@ -38,19 +40,16 @@ export default async function TeamPage() {
   // Other members' emails are stored when they sign up
 
   return (
-    <div className="flex h-screen overflow-hidden bg-gray-100">
-      <Sidebar
-        storeName={profile.store_name}
-        fullName={profile.full_name}
-        role={profile.role}
+    <PageShell
+      storeName={profile.store_name}
+      fullName={profile.full_name}
+      role={profile.role}
+    >
+      <TeamClient
+        teamMembers={teamMembers ?? []}
+        currentUserId={user.id}
+        profile={profile}
       />
-      <main className="flex-1 overflow-y-auto pb-24 lg:pb-0">
-        <TeamClient
-          teamMembers={teamMembers ?? []}
-          currentUserId={user.id}
-          profile={profile}
-        />
-      </main>
-    </div>
+    </PageShell>
   );
 }

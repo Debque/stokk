@@ -118,11 +118,11 @@ export default function IMEIClient({
 
   function getStatusStyle(status: string) {
     switch (status) {
-      case "in_stock": return { bg: "#DCFCE7", color: "#14532D", label: "In stock" };
-      case "sold": return { bg: "#E1F5EE", color: "#0F6E56", label: "Sold" };
-      case "faulty": return { bg: "#FEE2E2", color: "#7F1D1D", label: "Faulty" };
-      case "returned": return { bg: "#FFF7ED", color: "#9A3412", label: "Returned" };
-      default: return { bg: "#F3F4F6", color: "#6B7280", label: status };
+      case "in_stock": return { bg: "var(--bg-success)", color: "var(--color-success-dark)", label: "In stock" };
+      case "sold": return { bg: "var(--bg-green)", color: "var(--brand-dark)", label: "Sold" };
+      case "faulty": return { bg: "var(--bg-danger)", color: "var(--color-loss)", label: "Faulty" };
+      case "returned": return { bg: "var(--bg-warning)", color: "var(--color-warning-dark)", label: "Returned" };
+      default: return { bg: "var(--border-subtle)", color: "var(--text-muted)", label: status };
     }
   }
 
@@ -173,7 +173,6 @@ export default function IMEIClient({
         return;
       }
 
-      // Upload images for each unit
       const { data: insertedItems } = await supabase
         .from("stock_items")
         .select("id, imei")
@@ -261,21 +260,24 @@ export default function IMEIClient({
   }
 
   return (
-    <div>
+    <div style={{ backgroundColor: "var(--bg-subtle)", minHeight: "100vh" }}>
       {/* Top bar */}
-      <div className="sticky top-0 z-10 flex items-center justify-between px-4 lg:px-6 py-4 bg-white border-b border-gray-100">
+      <div
+        className="sticky top-0 z-10 flex items-center justify-between px-4 lg:px-6 py-4 border-b"
+        style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border-subtle)" }}
+      >
         <div className="flex items-center gap-3">
           <MobileMenuButton />
           <div>
-            <h1 className="text-lg font-bold text-gray-900">IMEI Tracker</h1>
-            <p className="text-xs text-gray-500 mt-0.5">Serialized units — {profile.store_name}</p>
+            <h1 className="text-lg font-bold" style={{ color: "var(--text-primary)" }}>IMEI Tracker</h1>
+            <p className="text-xs mt-0.5" style={{ color: "var(--text-muted)" }}>Serialized units — {profile.store_name}</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
           <button
             onClick={() => router.push("/inventory")}
             className="h-9 px-4 rounded-xl border text-sm font-medium"
-            style={{ borderColor: "#E5E7EB", color: "#6B7280" }}
+            style={{ borderColor: "var(--border-default)", color: "var(--text-muted)" }}
           >
             ← Inventory
           </button>
@@ -283,7 +285,7 @@ export default function IMEIClient({
             <button
               onClick={() => setShowAddUnit(true)}
               className="h-9 px-4 rounded-xl text-sm font-semibold text-white flex items-center gap-2"
-              style={{ backgroundColor: "#0D3B2E" }}
+              style={{ backgroundColor: "var(--brand-primary)" }}
             >
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
                 <path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"/>
@@ -297,13 +299,13 @@ export default function IMEIClient({
       <div className="p-4 lg:p-6 space-y-5">
 
         {/* Product selector */}
-        <div className="bg-white rounded-2xl border border-gray-100 p-4">
-          <label className="text-sm font-medium text-gray-700 block mb-2">Select product</label>
+        <div className="rounded-2xl border p-4" style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border-subtle)" }}>
+          <label className="text-sm font-medium block mb-2" style={{ color: "var(--text-secondary)" }}>Select product</label>
           <select
             value={initialProductId ?? ""}
             onChange={(e) => router.push(`/imei?product=${e.target.value}`)}
-            className="w-full h-11 px-3 rounded-xl border text-sm outline-none bg-white"
-            style={{ borderColor: "#E5E7EB" }}
+            className="w-full h-11 px-3 rounded-xl border text-sm outline-none"
+            style={{ borderColor: "var(--border-default)", backgroundColor: "var(--bg-card)", color: "var(--text-primary)" }}
           >
             <option value="">— Choose a serialized product —</option>
             {products.map((p) => {
@@ -320,16 +322,25 @@ export default function IMEIClient({
             {/* Stats */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
               {[
-                { label: "Total registered", value: stats.totalRegistered, color: "#1D9E75" },
-                { label: "In stock", value: stats.inStock, color: "#16A34A" },
-                { label: "Sold this month", value: stats.sold, color: "#0F6E56" },
-                { label: "Faulty / returned", value: stats.faulty, color: "#DC2626" },
+                { label: "Total registered", value: stats.totalRegistered, borderColor: "var(--brand-mid)", dangerIfPositive: false },
+                { label: "In stock", value: stats.inStock, borderColor: "var(--color-profit)", dangerIfPositive: false },
+                { label: "Sold this month", value: stats.sold, borderColor: "var(--brand-dark)", dangerIfPositive: false },
+                { label: "Faulty / returned", value: stats.faulty, borderColor: "var(--color-danger)", dangerIfPositive: true },
               ].map((stat) => (
-                <div key={stat.label} className="bg-white rounded-2xl border border-gray-100 p-4"
-                  style={{ borderLeft: `4px solid ${stat.color}` }}>
-                  <p className="text-xs text-gray-500 mb-1">{stat.label}</p>
-                  <p className="text-2xl font-bold"
-                    style={{ color: stat.color === "#DC2626" && stat.value > 0 ? stat.color : "#111827" }}>
+                <div
+                  key={stat.label}
+                  className="rounded-2xl border p-4"
+                  style={{
+                    backgroundColor: "var(--bg-card)",
+                    borderColor: "var(--border-subtle)",
+                    borderLeft: `4px solid ${stat.borderColor}`,
+                  }}
+                >
+                  <p className="text-xs mb-1" style={{ color: "var(--text-muted)" }}>{stat.label}</p>
+                  <p
+                    className="text-2xl font-bold"
+                    style={{ color: stat.dangerIfPositive && stat.value > 0 ? "var(--color-danger)" : "var(--text-primary)" }}
+                  >
                     {stat.value}
                   </p>
                 </div>
@@ -337,8 +348,8 @@ export default function IMEIClient({
             </div>
 
             {/* IMEI Search */}
-            <div className="bg-white rounded-2xl border border-gray-100 p-5">
-              <p className="text-sm font-semibold text-gray-900 mb-3">Search by IMEI</p>
+            <div className="rounded-2xl border p-5" style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border-subtle)" }}>
+              <p className="text-sm font-semibold mb-3" style={{ color: "var(--text-primary)" }}>Search by IMEI</p>
               <div className="flex gap-2">
                 <input
                   type="text"
@@ -347,28 +358,36 @@ export default function IMEIClient({
                   onKeyDown={(e) => e.key === "Enter" && handleSearch()}
                   placeholder="Enter IMEI number..."
                   className="flex-1 h-11 px-3 rounded-xl border text-sm outline-none"
-                  style={{ borderColor: "#E5E7EB" }}
+                  style={{ borderColor: "var(--border-default)", backgroundColor: "var(--bg-card)", color: "var(--text-primary)" }}
                 />
-                <button onClick={handleSearch} className="h-11 px-5 rounded-xl text-sm font-semibold text-white"
-                  style={{ backgroundColor: "#0D3B2E" }}>
+                <button
+                  onClick={handleSearch}
+                  className="h-11 px-5 rounded-xl text-sm font-semibold text-white"
+                  style={{ backgroundColor: "var(--brand-primary)" }}
+                >
                   Search
                 </button>
               </div>
 
               {searchResult === "not_found" && (
-                <div className="mt-3 p-3 rounded-xl text-sm" style={{ backgroundColor: "#FEE2E2", color: "#DC2626" }}>
+                <div className="mt-3 p-3 rounded-xl text-sm" style={{ backgroundColor: "var(--bg-danger)", color: "var(--color-loss)" }}>
                   No unit found with IMEI {imeiSearch}
                 </div>
               )}
 
               {searchResult && searchResult !== "not_found" && (
-                <div className="mt-3 p-4 rounded-xl" style={{ backgroundColor: "#E1F5EE", border: "1px solid #5DCAA5" }}>
+                <div className="mt-3 p-4 rounded-xl" style={{ backgroundColor: "var(--bg-green)", border: "1px solid var(--brand-light)" }}>
                   <div className="flex items-center justify-between mb-3">
-                    <span className="text-sm font-bold" style={{ color: "#0D3B2E" }}>
+                    <span className="text-sm font-bold" style={{ color: "var(--brand-primary)" }}>
                       Unit found — {selectedProduct.name}
                     </span>
-                    <span className="text-xs font-semibold px-2.5 py-1 rounded-full"
-                      style={{ backgroundColor: getStatusStyle(searchResult.status).bg, color: getStatusStyle(searchResult.status).color }}>
+                    <span
+                      className="text-xs font-semibold px-2.5 py-1 rounded-full"
+                      style={{
+                        backgroundColor: getStatusStyle(searchResult.status).bg,
+                        color: getStatusStyle(searchResult.status).color,
+                      }}
+                    >
                       {getStatusStyle(searchResult.status).label}
                     </span>
                   </div>
@@ -382,15 +401,15 @@ export default function IMEIClient({
                       { label: "Profit", value: searchResult.sale ? fmt(Number(searchResult.sale.profit)) : "—" },
                     ].map((field) => (
                       <div key={field.label}>
-                        <p className="text-xs font-semibold mb-1" style={{ color: "#0F6E56" }}>{field.label}</p>
-                        <p className="text-sm font-bold" style={{ color: "#0D3B2E" }}>{field.value}</p>
+                        <p className="text-xs font-semibold mb-1" style={{ color: "var(--brand-dark)" }}>{field.label}</p>
+                        <p className="text-sm font-bold" style={{ color: "var(--brand-primary)" }}>{field.value}</p>
                       </div>
                     ))}
                   </div>
                   {searchResult.condition_notes && (
-                    <div className="mt-3 p-2.5 rounded-lg" style={{ backgroundColor: "#FFF7ED" }}>
-                      <p className="text-xs font-semibold" style={{ color: "#9A3412" }}>Condition note</p>
-                      <p className="text-sm mt-0.5" style={{ color: "#9A3412" }}>{searchResult.condition_notes}</p>
+                    <div className="mt-3 p-2.5 rounded-lg" style={{ backgroundColor: "var(--bg-warning)" }}>
+                      <p className="text-xs font-semibold" style={{ color: "var(--color-warning-dark)" }}>Condition note</p>
+                      <p className="text-sm mt-0.5" style={{ color: "var(--color-warning-dark)" }}>{searchResult.condition_notes}</p>
                     </div>
                   )}
                 </div>
@@ -398,13 +417,13 @@ export default function IMEIClient({
             </div>
 
             {/* Units table */}
-            <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
-              <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
-                <p className="text-sm font-semibold text-gray-900">
+            <div className="rounded-2xl border overflow-hidden" style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border-subtle)" }}>
+              <div className="flex items-center justify-between px-5 py-4 border-b" style={{ borderColor: "var(--border-subtle)" }}>
+                <p className="text-sm font-semibold" style={{ color: "var(--text-primary)" }}>
                   {selectedProduct.name} — all registered units
                 </p>
                 {isOwner && (
-                  <button onClick={() => setShowAddUnit(true)} className="text-sm font-medium" style={{ color: "#1D9E75" }}>
+                  <button onClick={() => setShowAddUnit(true)} className="text-sm font-medium" style={{ color: "var(--brand-mid)" }}>
                     + Register new unit
                   </button>
                 )}
@@ -412,16 +431,16 @@ export default function IMEIClient({
 
               {stockItems.length === 0 ? (
                 <div className="p-12 text-center">
-                  <p className="text-sm text-gray-400 mb-1">No units registered yet</p>
-                  <p className="text-xs text-gray-300">Click &quot;Register unit&quot; to add your first IMEI</p>
+                  <p className="text-sm mb-1" style={{ color: "var(--text-faint)" }}>No units registered yet</p>
+                  <p className="text-xs" style={{ color: "var(--border-strong)" }}>Click &quot;Register unit&quot; to add your first IMEI</p>
                 </div>
               ) : (
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead>
-                      <tr style={{ backgroundColor: "#F9FAFB" }}>
+                      <tr style={{ backgroundColor: "var(--bg-subtle)" }}>
                         {["Photo", "IMEI", "Variant", "Cost", "Sold for", "Profit", "Status", "Date"].map((h) => (
-                          <th key={h} className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide whitespace-nowrap">
+                          <th key={h} className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wide whitespace-nowrap" style={{ color: "var(--text-muted)" }}>
                             {h}
                           </th>
                         ))}
@@ -431,16 +450,18 @@ export default function IMEIClient({
                       {stockItems.map((item, i) => {
                         const style = getStatusStyle(item.status);
                         return (
-                          <tr key={item.id} style={{ borderTop: i > 0 ? "1px solid #F3F4F6" : "none" }}>
+                          <tr key={item.id} style={{ borderTop: i > 0 ? `1px solid var(--border-subtle)` : "none" }}>
                             <td className="px-4 py-3">
-                              <label className="relative w-10 h-10 rounded-xl overflow-hidden flex items-center justify-center cursor-pointer group flex-shrink-0"
-                                style={{ backgroundColor: "#F3F4F6" }}>
+                              <label
+                                className="relative w-10 h-10 rounded-xl overflow-hidden flex items-center justify-center cursor-pointer group flex-shrink-0"
+                                style={{ backgroundColor: "var(--border-subtle)" }}
+                              >
                                 {item.image_url ? (
                                   <Image src={item.image_url} alt="unit" fill className="object-cover"/>
                                 ) : (
                                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                                    <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z" stroke="#9CA3AF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                                    <circle cx="12" cy="13" r="4" stroke="#9CA3AF" strokeWidth="2"/>
+                                    <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z" stroke="var(--text-faint)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                    <circle cx="12" cy="13" r="4" stroke="var(--text-faint)" strokeWidth="2"/>
                                   </svg>
                                 )}
                                 {isOwner && (
@@ -463,32 +484,34 @@ export default function IMEIClient({
                                 {uploadingId === item.id && (
                                   <div className="absolute inset-0 bg-white/80 flex items-center justify-center">
                                     <svg className="animate-spin" width="14" height="14" viewBox="0 0 24 24" fill="none">
-                                      <circle cx="12" cy="12" r="10" stroke="#E1F5EE" strokeWidth="3"/>
-                                      <path d="M12 2a10 10 0 0110 10" stroke="#1D9E75" strokeWidth="3" strokeLinecap="round"/>
+                                      <circle cx="12" cy="12" r="10" stroke="var(--bg-green)" strokeWidth="3"/>
+                                      <path d="M12 2a10 10 0 0110 10" stroke="var(--brand-mid)" strokeWidth="3" strokeLinecap="round"/>
                                     </svg>
                                   </div>
                                 )}
                               </label>
                             </td>
-                            <td className="px-4 py-3 font-mono text-xs" style={{ color: "#0F6E56" }}>{item.imei}</td>
-                            <td className="px-4 py-3 text-gray-600 text-xs">{item.variant ?? "—"}</td>
-                            <td className="px-4 py-3 text-gray-700 text-xs font-medium">{fmt(Number(item.cost_price))}</td>
-                            <td className="px-4 py-3 text-gray-700 text-xs font-medium">
+                            <td className="px-4 py-3 font-mono text-xs" style={{ color: "var(--brand-dark)" }}>{item.imei}</td>
+                            <td className="px-4 py-3 text-xs" style={{ color: "var(--text-muted)" }}>{item.variant ?? "—"}</td>
+                            <td className="px-4 py-3 text-xs font-medium" style={{ color: "var(--text-secondary)" }}>{fmt(Number(item.cost_price))}</td>
+                            <td className="px-4 py-3 text-xs font-medium" style={{ color: "var(--text-secondary)" }}>
                               {item.sale ? fmt(Number(item.sale.selling_price)) : "—"}
                             </td>
-                            <td className="px-4 py-3 text-xs font-bold" style={{ color: item.sale ? "#16A34A" : "#9CA3AF" }}>
+                            <td className="px-4 py-3 text-xs font-bold" style={{ color: item.sale ? "var(--color-profit)" : "var(--text-faint)" }}>
                               {item.sale ? fmt(Number(item.sale.profit)) : "—"}
                             </td>
                             <td className="px-4 py-3">
-                              <span className="text-xs font-semibold px-2.5 py-1 rounded-full"
-                                style={{ backgroundColor: style.bg, color: style.color }}>
+                              <span
+                                className="text-xs font-semibold px-2.5 py-1 rounded-full"
+                                style={{ backgroundColor: style.bg, color: style.color }}
+                              >
                                 {style.label}
                               </span>
                               {item.condition_notes && (
-                                <p className="text-xs mt-1" style={{ color: "#9A3412" }}>{item.condition_notes}</p>
+                                <p className="text-xs mt-1" style={{ color: "var(--color-warning-dark)" }}>{item.condition_notes}</p>
                               )}
                             </td>
-                            <td className="px-4 py-3 text-xs text-gray-400">
+                            <td className="px-4 py-3 text-xs" style={{ color: "var(--text-faint)" }}>
                               {new Date(item.purchased_at).toLocaleDateString("en-NG", { day: "numeric", month: "short" })}
                             </td>
                           </tr>
@@ -503,10 +526,14 @@ export default function IMEIClient({
         )}
 
         {!selectedProduct && products.length === 0 && (
-          <div className="bg-white rounded-2xl border border-gray-100 p-12 text-center">
-            <p className="text-sm text-gray-400 mb-1">No serialized products yet</p>
-            <p className="text-xs text-gray-300 mb-4">Add a smartphone or smart watch from the inventory page first</p>
-            <button onClick={() => router.push("/inventory")} className="px-5 py-2.5 rounded-xl text-sm font-semibold text-white" style={{ backgroundColor: "#0D3B2E" }}>
+          <div className="rounded-2xl border p-12 text-center" style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border-subtle)" }}>
+            <p className="text-sm mb-1" style={{ color: "var(--text-faint)" }}>No serialized products yet</p>
+            <p className="text-xs mb-4" style={{ color: "var(--border-strong)" }}>Add a smartphone or smart watch from the inventory page first</p>
+            <button
+              onClick={() => router.push("/inventory")}
+              className="px-5 py-2.5 rounded-xl text-sm font-semibold text-white"
+              style={{ backgroundColor: "var(--brand-primary)" }}
+            >
               Go to Inventory
             </button>
           </div>
@@ -515,15 +542,18 @@ export default function IMEIClient({
 
       {/* Add unit modal */}
       {showAddUnit && selectedProduct && (
-        <div className="fixed inset-0 z-50 flex items-end lg:items-center justify-center p-4" style={{ backgroundColor: "rgba(0,0,0,0.4)" }}>
-          <div className="w-full max-w-lg bg-white rounded-2xl overflow-hidden max-h-[90vh] flex flex-col">
-            <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+        <div className="fixed inset-0 z-50 flex items-end lg:items-center justify-center p-4" style={{ backgroundColor: "rgba(0,0,0,0.5)" }}>
+          <div className="w-full max-w-lg rounded-2xl overflow-hidden max-h-[90vh] flex flex-col" style={{ backgroundColor: "var(--bg-card)" }}>
+            <div className="flex items-center justify-between px-5 py-4 border-b" style={{ borderColor: "var(--border-subtle)" }}>
               <div>
-                <h2 className="text-base font-bold text-gray-900">Register units</h2>
-                <p className="text-xs text-gray-400 mt-0.5">{selectedProduct.name} · add multiple at once</p>
+                <h2 className="text-base font-bold" style={{ color: "var(--text-primary)" }}>Register units</h2>
+                <p className="text-xs mt-0.5" style={{ color: "var(--text-faint)" }}>{selectedProduct.name} · add multiple at once</p>
               </div>
-              <button onClick={() => { setShowAddUnit(false); setError(null); }}
-                className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400">
+              <button
+                onClick={() => { setShowAddUnit(false); setError(null); }}
+                className="w-8 h-8 flex items-center justify-center rounded-lg"
+                style={{ color: "var(--text-faint)" }}
+              >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
                   <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
                 </svg>
@@ -532,26 +562,26 @@ export default function IMEIClient({
 
             <div className="p-5 overflow-y-auto flex-1 space-y-4">
               <div className="space-y-1.5">
-                <label className="text-sm font-medium text-gray-700">Purchase date (applies to all units)</label>
+                <label className="text-sm font-medium" style={{ color: "var(--text-secondary)" }}>Purchase date (applies to all units)</label>
                 <input
                   type="date"
                   value={form.purchasedAt}
                   onChange={(e) => setForm({ ...form, purchasedAt: e.target.value })}
                   className="w-full h-11 px-3 rounded-xl border text-sm outline-none"
-                  style={{ borderColor: "#E5E7EB" }}
+                  style={{ borderColor: "var(--border-default)", backgroundColor: "var(--bg-card)", color: "var(--text-primary)" }}
                 />
               </div>
 
               <div className="space-y-3">
                 {unitRows.map((row, i) => (
-                  <div key={i} className="p-3 rounded-xl border space-y-2" style={{ borderColor: "#F3F4F6" }}>
+                  <div key={i} className="p-3 rounded-xl border space-y-2" style={{ borderColor: "var(--border-subtle)" }}>
                     <div className="flex items-center justify-between">
-                      <span className="text-xs font-semibold text-gray-500">Unit {i + 1}</span>
+                      <span className="text-xs font-semibold" style={{ color: "var(--text-muted)" }}>Unit {i + 1}</span>
                       <button
                         onClick={() => removeRow(i)}
                         disabled={unitRows.length === 1}
                         className="w-7 h-7 flex items-center justify-center rounded-lg disabled:opacity-30"
-                        style={{ color: "#DC2626" }}
+                        style={{ color: "var(--color-danger)" }}
                       >
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
                           <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
@@ -565,7 +595,11 @@ export default function IMEIClient({
                       onChange={(e) => updateRow(i, "imei", e.target.value)}
                       placeholder="IMEI number *"
                       className="w-full h-10 px-3 rounded-xl border text-sm outline-none font-mono"
-                      style={{ borderColor: row.imei && row.imei.length >= 10 ? "#1D9E75" : row.imei ? "#EF4444" : "#E5E7EB" }}
+                      style={{
+                        borderColor: row.imei && row.imei.length >= 10 ? "var(--brand-mid)" : row.imei ? "var(--color-danger)" : "var(--border-default)",
+                        backgroundColor: "var(--bg-card)",
+                        color: "var(--text-primary)",
+                      }}
                     />
 
                     <div className="grid grid-cols-2 gap-2">
@@ -575,7 +609,7 @@ export default function IMEIClient({
                         onChange={(e) => updateRow(i, "variant", e.target.value)}
                         placeholder="Variant e.g. Black 64GB"
                         className="h-10 px-3 rounded-xl border text-sm outline-none"
-                        style={{ borderColor: "#E5E7EB" }}
+                        style={{ borderColor: "var(--border-default)", backgroundColor: "var(--bg-card)", color: "var(--text-primary)" }}
                       />
                       <input
                         type="number"
@@ -583,13 +617,13 @@ export default function IMEIClient({
                         onChange={(e) => updateRow(i, "costPrice", e.target.value)}
                         placeholder="Cost (₦)"
                         className="h-10 px-3 rounded-xl border text-sm outline-none"
-                        style={{ borderColor: "#E5E7EB" }}
+                        style={{ borderColor: "var(--border-default)", backgroundColor: "var(--bg-card)", color: "var(--text-primary)" }}
                       />
                     </div>
 
                     <label
                       className="w-full h-20 rounded-xl border-2 border-dashed flex items-center justify-center cursor-pointer overflow-hidden relative"
-                      style={{ borderColor: row.imagePreview ? "#1D9E75" : "#E5E7EB" }}
+                      style={{ borderColor: row.imagePreview ? "var(--brand-mid)" : "var(--border-default)" }}
                     >
                       {row.imagePreview ? (
                         // eslint-disable-next-line @next/next/no-img-element
@@ -597,10 +631,10 @@ export default function IMEIClient({
                       ) : (
                         <div className="flex flex-col items-center gap-1">
                           <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                            <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z" stroke="#9CA3AF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                            <circle cx="12" cy="13" r="4" stroke="#9CA3AF" strokeWidth="2"/>
+                            <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z" stroke="var(--text-faint)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                            <circle cx="12" cy="13" r="4" stroke="var(--text-faint)" strokeWidth="2"/>
                           </svg>
-                          <span className="text-xs text-gray-400">Tap to add photo</span>
+                          <span className="text-xs" style={{ color: "var(--text-faint)" }}>Tap to add photo</span>
                         </div>
                       )}
                       <input
@@ -617,7 +651,7 @@ export default function IMEIClient({
               <button
                 onClick={addRow}
                 className="w-full h-10 rounded-xl border-2 border-dashed text-sm font-medium flex items-center justify-center gap-2 transition"
-                style={{ borderColor: "#5DCAA5", color: "#0F6E56" }}
+                style={{ borderColor: "var(--brand-light)", color: "var(--brand-dark)" }}
               >
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
                   <path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"/>
@@ -626,16 +660,16 @@ export default function IMEIClient({
               </button>
 
               {error && (
-                <p className="text-sm px-3 py-2 rounded-xl" style={{ backgroundColor: "#FEE2E2", color: "#DC2626" }}>{error}</p>
+                <p className="text-sm px-3 py-2 rounded-xl" style={{ backgroundColor: "var(--bg-danger)", color: "var(--color-loss)" }}>{error}</p>
               )}
             </div>
 
-            <div className="px-5 py-4 border-t border-gray-100">
+            <div className="px-5 py-4 border-t" style={{ borderColor: "var(--border-subtle)" }}>
               <button
                 onClick={handleAddUnit}
                 disabled={loading || unitRows.every((r) => !r.imei.trim())}
                 className="w-full h-11 rounded-xl text-sm font-semibold text-white disabled:opacity-50 disabled:cursor-not-allowed"
-                style={{ backgroundColor: "#0D3B2E" }}
+                style={{ backgroundColor: "var(--brand-primary)" }}
               >
                 {loading ? "Registering…" : `Register ${unitRows.filter((r) => r.imei.trim().length >= 10).length || ""} unit${unitRows.filter((r) => r.imei.trim().length >= 10).length !== 1 ? "s" : ""}`}
               </button>
@@ -645,8 +679,10 @@ export default function IMEIClient({
       )}
 
       {/* Mobile bottom nav */}
-      <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 grid grid-cols-5 z-20"
-        style={{ paddingBottom: "env(safe-area-inset-bottom)" }}>
+      <nav
+        className="lg:hidden fixed bottom-0 left-0 right-0 border-t grid grid-cols-5 z-20"
+        style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border-subtle)", paddingBottom: "env(safe-area-inset-bottom)" }}
+      >
         {[
           { label: "Dashboard", href: "/dashboard" },
           { label: "Inventory", href: "/inventory" },
@@ -654,7 +690,7 @@ export default function IMEIClient({
           { label: "Reports", href: "/reports" },
           { label: "More", href: "/settings" },
         ].map((item) => (
-          <a key={item.href} href={item.href} className="flex flex-col items-center justify-center py-3 gap-1" style={{ color: "#9CA3AF" }}>
+          <a key={item.href} href={item.href} className="flex flex-col items-center justify-center py-3 gap-1" style={{ color: "var(--text-faint)" }}>
             <span className="text-xs font-medium">{item.label}</span>
           </a>
         ))}

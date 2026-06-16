@@ -1,12 +1,14 @@
 import { createSupabaseServerClient } from "@/lib/supabase-server";
 import { redirect } from "next/navigation";
-import Sidebar from "@/components/Sidebar";
+import PageShell from "@/components/PageShell";
 import ExpensesClient from "./ExpensesClient";
 
 export default async function ExpensesPage() {
   const supabase = await createSupabaseServerClient();
 
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
   const { data: profile } = await supabase
@@ -33,30 +35,29 @@ export default async function ExpensesPage() {
 
   // Total this month
   const totalThisMonth = (expenses ?? []).reduce(
-    (sum, e) => sum + Number(e.amount), 0
+    (sum, e) => sum + Number(e.amount),
+    0,
   );
 
   // Group by category
   const categoryTotals: Record<string, number> = {};
   (expenses ?? []).forEach((e) => {
-    categoryTotals[e.category] = (categoryTotals[e.category] ?? 0) + Number(e.amount);
+    categoryTotals[e.category] =
+      (categoryTotals[e.category] ?? 0) + Number(e.amount);
   });
 
   return (
-    <div className="flex h-screen overflow-hidden bg-gray-100">
-      <Sidebar
-        storeName={profile.store_name}
-        fullName={profile.full_name}
-        role={profile.role}
+    <PageShell
+      storeName={profile.store_name}
+      fullName={profile.full_name}
+      role={profile.role}
+    >
+      <ExpensesClient
+        expenses={expenses ?? []}
+        totalThisMonth={totalThisMonth}
+        categoryTotals={categoryTotals}
+        profile={profile}
       />
-      <main className="flex-1 overflow-y-auto pb-24 lg:pb-0">
-        <ExpensesClient
-          expenses={expenses ?? []}
-          totalThisMonth={totalThisMonth}
-          categoryTotals={categoryTotals}
-          profile={profile}
-        />
-      </main>
-    </div>
+    </PageShell>
   );
 }

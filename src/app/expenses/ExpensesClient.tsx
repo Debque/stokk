@@ -117,13 +117,7 @@ export default function ExpensesClient({
 
       if (insertError) throw insertError;
 
-      setForm({
-        title: "",
-        category: "Rent",
-        amount: "",
-        expense_date: new Date().toISOString().split("T")[0],
-        notes: "",
-      });
+      setForm({ title: "", category: "Rent", amount: "", expense_date: new Date().toISOString().split("T")[0], notes: "" });
       setShowForm(false);
       setSuccess("Expense added successfully.");
       router.refresh();
@@ -193,21 +187,24 @@ export default function ExpensesClient({
   const maxCategory = Math.max(...Object.values(categoryTotals), 1);
 
   return (
-    <div>
+    <div style={{ backgroundColor: "var(--bg-subtle)", minHeight: "100vh" }}>
       {/* Top bar */}
-      <div className="sticky top-0 z-10 flex items-center justify-between px-4 lg:px-6 py-4 bg-white border-b border-gray-100">
+      <div
+        className="sticky top-0 z-10 flex items-center justify-between px-4 lg:px-6 py-4 border-b"
+        style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border-subtle)" }}
+      >
         <div className="flex items-center gap-3">
           <MobileMenuButton />
           <div>
-            <h1 className="text-lg font-bold text-gray-900">Expenses</h1>
-            <p className="text-xs text-gray-500 mt-0.5">{monthName}</p>
+            <h1 className="text-lg font-bold" style={{ color: "var(--text-primary)" }}>Expenses</h1>
+            <p className="text-xs mt-0.5" style={{ color: "var(--text-muted)" }}>{monthName}</p>
           </div>
         </div>
         {isOwner && (
           <button
             onClick={() => setShowForm(true)}
             className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold text-white"
-            style={{ backgroundColor: "#0D3B2E" }}
+            style={{ backgroundColor: "var(--brand-primary)" }}
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
               <path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"/>
@@ -221,10 +218,8 @@ export default function ExpensesClient({
 
         {/* Success */}
         {success && (
-          <div
-            className="p-4 rounded-2xl text-sm font-medium flex items-center gap-3"
-            style={{ backgroundColor: "#DCFCE7", color: "#14532D" }}
-          >
+          <div className="p-4 rounded-2xl text-sm font-medium flex items-center gap-3"
+            style={{ backgroundColor: "var(--bg-success)", color: "var(--color-success-dark)" }}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
               <path d="M20 6L9 17l-5-5" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
@@ -234,20 +229,24 @@ export default function ExpensesClient({
 
         {/* Total card */}
         <div
-          className="bg-white rounded-2xl p-5 border"
-          style={{ borderLeft: "4px solid #EF4444", borderColor: "#FEE2E2" }}
+          className="rounded-2xl p-5 border"
+          style={{
+            backgroundColor: "var(--bg-card)",
+            borderColor: "var(--bg-danger)",
+            borderLeft: "4px solid var(--color-danger)",
+          }}
         >
-          <p className="text-xs font-medium text-gray-500 mb-1">Total expenses — {monthName}</p>
-          <p className="text-3xl font-bold" style={{ color: "#EF4444" }}>{fmt(totalThisMonth)}</p>
-          <p className="text-xs text-gray-400 mt-1">
+          <p className="text-xs font-medium mb-1" style={{ color: "var(--text-muted)" }}>Total expenses — {monthName}</p>
+          <p className="text-3xl font-bold" style={{ color: "var(--color-danger)" }}>{fmt(totalThisMonth)}</p>
+          <p className="text-xs mt-1" style={{ color: "var(--text-faint)" }}>
             {expenses.length} expense{expenses.length !== 1 ? "s" : ""} recorded
           </p>
         </div>
 
         {/* Category breakdown */}
         {Object.keys(categoryTotals).length > 0 && (
-          <div className="bg-white rounded-2xl border border-gray-100 p-5">
-            <h2 className="text-sm font-semibold text-gray-900 mb-4">By category</h2>
+          <div className="rounded-2xl border p-5" style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border-subtle)" }}>
+            <h2 className="text-sm font-semibold mb-4" style={{ color: "var(--text-primary)" }}>By category</h2>
             <div className="space-y-3">
               {Object.entries(categoryTotals)
                 .sort((a, b) => b[1] - a[1])
@@ -255,17 +254,17 @@ export default function ExpensesClient({
                   <div key={cat}>
                     <div className="flex items-center justify-between mb-1">
                       <div className="flex items-center gap-2">
-                        <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: CATEGORY_COLORS[cat] ?? "#9CA3AF" }}/>
-                        <span className="text-sm font-medium text-gray-700">{cat}</span>
+                        <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: CATEGORY_COLORS[cat] ?? "var(--text-faint)" }}/>
+                        <span className="text-sm font-medium" style={{ color: "var(--text-secondary)" }}>{cat}</span>
                       </div>
-                      <span className="text-sm font-semibold text-gray-900">{fmt(amount)}</span>
+                      <span className="text-sm font-semibold" style={{ color: "var(--text-primary)" }}>{fmt(amount)}</span>
                     </div>
-                    <div className="h-1.5 rounded-full bg-gray-100 overflow-hidden">
+                    <div className="h-1.5 rounded-full overflow-hidden" style={{ backgroundColor: "var(--border-subtle)" }}>
                       <div
                         className="h-full rounded-full transition-all"
                         style={{
                           width: `${Math.round((amount / maxCategory) * 100)}%`,
-                          backgroundColor: CATEGORY_COLORS[cat] ?? "#9CA3AF",
+                          backgroundColor: CATEGORY_COLORS[cat] ?? "var(--text-faint)",
                         }}
                       />
                     </div>
@@ -276,26 +275,26 @@ export default function ExpensesClient({
         )}
 
         {/* Expenses list */}
-        <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
-          <div className="px-5 py-4 border-b border-gray-100">
-            <h2 className="text-sm font-semibold text-gray-900">All expenses this month</h2>
+        <div className="rounded-2xl border overflow-hidden" style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border-subtle)" }}>
+          <div className="px-5 py-4 border-b" style={{ borderColor: "var(--border-subtle)" }}>
+            <h2 className="text-sm font-semibold" style={{ color: "var(--text-primary)" }}>All expenses this month</h2>
           </div>
 
           {expenses.length === 0 ? (
             <div className="p-12 text-center">
-              <div className="w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4" style={{ backgroundColor: "#FEE2E2" }}>
+              <div className="w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4" style={{ backgroundColor: "var(--bg-danger)" }}>
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                  <path d="M21 4H3a2 2 0 00-2 2v12a2 2 0 002 2h18a2 2 0 002-2V6a2 2 0 00-2-2z" stroke="#EF4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                  <path d="M1 10h22" stroke="#EF4444" strokeWidth="2" strokeLinecap="round"/>
+                  <path d="M21 4H3a2 2 0 00-2 2v12a2 2 0 002 2h18a2 2 0 002-2V6a2 2 0 00-2-2z" stroke="var(--color-danger)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M1 10h22" stroke="var(--color-danger)" strokeWidth="2" strokeLinecap="round"/>
                 </svg>
               </div>
-              <p className="text-sm font-semibold text-gray-900 mb-1">No expenses yet</p>
-              <p className="text-xs text-gray-400 mb-4">Track your operating costs to see net profit</p>
+              <p className="text-sm font-semibold mb-1" style={{ color: "var(--text-primary)" }}>No expenses yet</p>
+              <p className="text-xs mb-4" style={{ color: "var(--text-faint)" }}>Track your operating costs to see net profit</p>
               {isOwner && (
                 <button
                   onClick={() => setShowForm(true)}
                   className="px-5 py-2.5 rounded-xl text-sm font-semibold text-white"
-                  style={{ backgroundColor: "#0D3B2E" }}
+                  style={{ backgroundColor: "var(--brand-primary)" }}
                 >
                   Add first expense
                 </button>
@@ -307,14 +306,14 @@ export default function ExpensesClient({
                 <div
                   key={expense.id}
                   className="flex items-center justify-between px-5 py-4"
-                  style={{ borderBottom: i < expenses.length - 1 ? "1px solid #F3F4F6" : "none" }}
+                  style={{ borderBottom: i < expenses.length - 1 ? `1px solid var(--border-subtle)` : "none" }}
                 >
                   <div className="flex items-center gap-3 flex-1 min-w-0">
                     <div
                       className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
                       style={{
                         backgroundColor: `${CATEGORY_COLORS[expense.category] ?? "#9CA3AF"}20`,
-                        color: CATEGORY_COLORS[expense.category] ?? "#9CA3AF",
+                        color: CATEGORY_COLORS[expense.category] ?? "var(--text-faint)",
                       }}
                     >
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
@@ -322,34 +321,34 @@ export default function ExpensesClient({
                       </svg>
                     </div>
                     <div className="min-w-0">
-                      <p className="text-sm font-semibold text-gray-900 truncate">{expense.title}</p>
+                      <p className="text-sm font-semibold truncate" style={{ color: "var(--text-primary)" }}>{expense.title}</p>
                       <div className="flex items-center gap-2 mt-0.5">
                         <span
                           className="text-xs font-medium px-2 py-0.5 rounded-full"
                           style={{
-                            backgroundColor: `${CATEGORY_COLORS[expense.category] ?? "#9CA3AF"}15`,
-                            color: CATEGORY_COLORS[expense.category] ?? "#9CA3AF",
+                            backgroundColor: `${CATEGORY_COLORS[expense.category] ?? "#9CA3AF"}20`,
+                            color: CATEGORY_COLORS[expense.category] ?? "var(--text-faint)",
                           }}
                         >
                           {expense.category}
                         </span>
-                        <span className="text-xs text-gray-400">
+                        <span className="text-xs" style={{ color: "var(--text-faint)" }}>
                           {new Date(expense.expense_date).toLocaleDateString("en-NG", { day: "numeric", month: "short" })}
                         </span>
                       </div>
-                      {expense.notes && <p className="text-xs text-gray-400 mt-0.5">{expense.notes}</p>}
+                      {expense.notes && <p className="text-xs mt-0.5" style={{ color: "var(--text-faint)" }}>{expense.notes}</p>}
                     </div>
                   </div>
                   <div className="flex items-center gap-2 flex-shrink-0 ml-3">
-                    <span className="text-sm font-bold" style={{ color: "#EF4444" }}>
+                    <span className="text-sm font-bold" style={{ color: "var(--color-danger)" }}>
                       −{fmt(Number(expense.amount))}
                     </span>
                     {isOwner && (
                       <>
                         <button
                           onClick={() => openEditModal(expense)}
-                          className="w-8 h-8 flex items-center justify-center rounded-lg transition hover:bg-gray-100"
-                          style={{ color: "#6B7280" }}
+                          className="w-8 h-8 flex items-center justify-center rounded-lg transition"
+                          style={{ color: "var(--text-muted)" }}
                           title="Edit expense"
                         >
                           <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
@@ -359,8 +358,8 @@ export default function ExpensesClient({
                         </button>
                         <button
                           onClick={() => setShowDeleteConfirm(expense)}
-                          className="w-8 h-8 flex items-center justify-center rounded-lg transition hover:bg-red-50"
-                          style={{ color: "#DC2626" }}
+                          className="w-8 h-8 flex items-center justify-center rounded-lg transition"
+                          style={{ color: "var(--color-loss)" }}
                           title="Delete expense"
                         >
                           <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
@@ -379,86 +378,51 @@ export default function ExpensesClient({
 
       {/* Add expense modal */}
       {showForm && (
-        <div
-          className="fixed inset-0 z-50 flex items-end lg:items-center justify-center p-4"
-          style={{ backgroundColor: "rgba(0,0,0,0.4)" }}
-        >
-          <div className="w-full max-w-md bg-white rounded-2xl overflow-hidden">
-            <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
-              <h2 className="text-base font-bold text-gray-900">Add expense</h2>
-              <button
-                onClick={() => { setShowForm(false); setError(null); }}
-                className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400"
-              >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                  <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                </svg>
+        <div className="fixed inset-0 z-50 flex items-end lg:items-center justify-center p-4" style={{ backgroundColor: "rgba(0,0,0,0.5)" }}>
+          <div className="w-full max-w-md rounded-2xl overflow-hidden" style={{ backgroundColor: "var(--bg-card)" }}>
+            <div className="flex items-center justify-between px-5 py-4 border-b" style={{ borderColor: "var(--border-subtle)" }}>
+              <h2 className="text-base font-bold" style={{ color: "var(--text-primary)" }}>Add expense</h2>
+              <button onClick={() => { setShowForm(false); setError(null); }} className="w-8 h-8 flex items-center justify-center rounded-lg" style={{ color: "var(--text-faint)" }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M18 6L6 18M6 6l12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>
               </button>
             </div>
             <div className="p-5 space-y-4">
               <div className="space-y-1.5">
-                <label className="text-sm font-medium text-gray-700">Title *</label>
-                <input
-                  type="text"
-                  value={form.title}
-                  onChange={(e) => setForm({ ...form, title: e.target.value })}
-                  placeholder="e.g. Monthly rent"
+                <label className="text-sm font-medium" style={{ color: "var(--text-secondary)" }}>Title *</label>
+                <input type="text" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="e.g. Monthly rent"
                   className="w-full h-11 px-3 rounded-xl border text-sm outline-none"
-                  style={{ borderColor: form.title ? "#1D9E75" : "#E5E7EB" }}
-                />
+                  style={{ borderColor: form.title ? "var(--brand-mid)" : "var(--border-default)", backgroundColor: "var(--bg-card)", color: "var(--text-primary)" }}/>
               </div>
               <div className="space-y-1.5">
-                <label className="text-sm font-medium text-gray-700">Category</label>
-                <select
-                  value={form.category}
-                  onChange={(e) => setForm({ ...form, category: e.target.value })}
-                  className="w-full h-11 px-3 rounded-xl border text-sm outline-none bg-white"
-                  style={{ borderColor: "#E5E7EB" }}
-                >
+                <label className="text-sm font-medium" style={{ color: "var(--text-secondary)" }}>Category</label>
+                <select value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })}
+                  className="w-full h-11 px-3 rounded-xl border text-sm outline-none"
+                  style={{ borderColor: "var(--border-default)", backgroundColor: "var(--bg-card)", color: "var(--text-primary)" }}>
                   {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
                 </select>
               </div>
               <div className="space-y-1.5">
-                <label className="text-sm font-medium text-gray-700">Amount (₦) *</label>
-                <input
-                  type="number"
-                  value={form.amount}
-                  onChange={(e) => setForm({ ...form, amount: e.target.value })}
-                  placeholder="0"
+                <label className="text-sm font-medium" style={{ color: "var(--text-secondary)" }}>Amount (₦) *</label>
+                <input type="number" value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value })} placeholder="0"
                   className="w-full h-11 px-3 rounded-xl border text-sm outline-none"
-                  style={{ borderColor: form.amount ? "#1D9E75" : "#E5E7EB" }}
-                />
+                  style={{ borderColor: form.amount ? "var(--brand-mid)" : "var(--border-default)", backgroundColor: "var(--bg-card)", color: "var(--text-primary)" }}/>
               </div>
               <div className="space-y-1.5">
-                <label className="text-sm font-medium text-gray-700">Date</label>
-                <input
-                  type="date"
-                  value={form.expense_date}
-                  onChange={(e) => setForm({ ...form, expense_date: e.target.value })}
+                <label className="text-sm font-medium" style={{ color: "var(--text-secondary)" }}>Date</label>
+                <input type="date" value={form.expense_date} onChange={(e) => setForm({ ...form, expense_date: e.target.value })}
                   className="w-full h-11 px-3 rounded-xl border text-sm outline-none"
-                  style={{ borderColor: "#E5E7EB" }}
-                />
+                  style={{ borderColor: "var(--border-default)", backgroundColor: "var(--bg-card)", color: "var(--text-primary)" }}/>
               </div>
               <div className="space-y-1.5">
-                <label className="text-sm font-medium text-gray-700">Notes (optional)</label>
-                <input
-                  type="text"
-                  value={form.notes}
-                  onChange={(e) => setForm({ ...form, notes: e.target.value })}
-                  placeholder="Any additional details"
+                <label className="text-sm font-medium" style={{ color: "var(--text-secondary)" }}>Notes (optional)</label>
+                <input type="text" value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} placeholder="Any additional details"
                   className="w-full h-11 px-3 rounded-xl border text-sm outline-none"
-                  style={{ borderColor: "#E5E7EB" }}
-                />
+                  style={{ borderColor: "var(--border-default)", backgroundColor: "var(--bg-card)", color: "var(--text-primary)" }}/>
               </div>
-              {error && (
-                <p className="text-sm px-3 py-2 rounded-xl" style={{ backgroundColor: "#FEE2E2", color: "#DC2626" }}>{error}</p>
-              )}
-              <button
-                onClick={handleSubmit}
-                disabled={loading || !form.title || !form.amount}
+              {error && <p className="text-sm px-3 py-2 rounded-xl" style={{ backgroundColor: "var(--bg-danger)", color: "var(--color-loss)" }}>{error}</p>}
+              <button onClick={handleSubmit} disabled={loading || !form.title || !form.amount}
                 className="w-full h-11 rounded-xl text-sm font-semibold text-white disabled:opacity-50 disabled:cursor-not-allowed"
-                style={{ backgroundColor: "#0D3B2E" }}
-              >
+                style={{ backgroundColor: "var(--brand-primary)" }}>
                 {loading ? "Saving…" : "Save expense"}
               </button>
             </div>
@@ -468,83 +432,51 @@ export default function ExpensesClient({
 
       {/* Edit expense modal */}
       {showEditForm && (
-        <div
-          className="fixed inset-0 z-50 flex items-end lg:items-center justify-center p-4"
-          style={{ backgroundColor: "rgba(0,0,0,0.4)" }}
-        >
-          <div className="w-full max-w-md bg-white rounded-2xl overflow-hidden">
-            <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
-              <h2 className="text-base font-bold text-gray-900">Edit expense</h2>
-              <button
-                onClick={() => { setShowEditForm(null); setError(null); }}
-                className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400"
-              >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                  <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                </svg>
+        <div className="fixed inset-0 z-50 flex items-end lg:items-center justify-center p-4" style={{ backgroundColor: "rgba(0,0,0,0.5)" }}>
+          <div className="w-full max-w-md rounded-2xl overflow-hidden" style={{ backgroundColor: "var(--bg-card)" }}>
+            <div className="flex items-center justify-between px-5 py-4 border-b" style={{ borderColor: "var(--border-subtle)" }}>
+              <h2 className="text-base font-bold" style={{ color: "var(--text-primary)" }}>Edit expense</h2>
+              <button onClick={() => { setShowEditForm(null); setError(null); }} className="w-8 h-8 flex items-center justify-center rounded-lg" style={{ color: "var(--text-faint)" }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M18 6L6 18M6 6l12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>
               </button>
             </div>
             <div className="p-5 space-y-4">
               <div className="space-y-1.5">
-                <label className="text-sm font-medium text-gray-700">Title *</label>
-                <input
-                  type="text"
-                  value={editForm.title}
-                  onChange={(e) => setEditForm({ ...editForm, title: e.target.value })}
+                <label className="text-sm font-medium" style={{ color: "var(--text-secondary)" }}>Title *</label>
+                <input type="text" value={editForm.title} onChange={(e) => setEditForm({ ...editForm, title: e.target.value })}
                   className="w-full h-11 px-3 rounded-xl border text-sm outline-none"
-                  style={{ borderColor: editForm.title ? "#1D9E75" : "#E5E7EB" }}
-                />
+                  style={{ borderColor: editForm.title ? "var(--brand-mid)" : "var(--border-default)", backgroundColor: "var(--bg-card)", color: "var(--text-primary)" }}/>
               </div>
               <div className="space-y-1.5">
-                <label className="text-sm font-medium text-gray-700">Category</label>
-                <select
-                  value={editForm.category}
-                  onChange={(e) => setEditForm({ ...editForm, category: e.target.value })}
-                  className="w-full h-11 px-3 rounded-xl border text-sm outline-none bg-white"
-                  style={{ borderColor: "#E5E7EB" }}
-                >
+                <label className="text-sm font-medium" style={{ color: "var(--text-secondary)" }}>Category</label>
+                <select value={editForm.category} onChange={(e) => setEditForm({ ...editForm, category: e.target.value })}
+                  className="w-full h-11 px-3 rounded-xl border text-sm outline-none"
+                  style={{ borderColor: "var(--border-default)", backgroundColor: "var(--bg-card)", color: "var(--text-primary)" }}>
                   {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
                 </select>
               </div>
               <div className="space-y-1.5">
-                <label className="text-sm font-medium text-gray-700">Amount (₦) *</label>
-                <input
-                  type="number"
-                  value={editForm.amount}
-                  onChange={(e) => setEditForm({ ...editForm, amount: e.target.value })}
+                <label className="text-sm font-medium" style={{ color: "var(--text-secondary)" }}>Amount (₦) *</label>
+                <input type="number" value={editForm.amount} onChange={(e) => setEditForm({ ...editForm, amount: e.target.value })}
                   className="w-full h-11 px-3 rounded-xl border text-sm outline-none"
-                  style={{ borderColor: editForm.amount ? "#1D9E75" : "#E5E7EB" }}
-                />
+                  style={{ borderColor: editForm.amount ? "var(--brand-mid)" : "var(--border-default)", backgroundColor: "var(--bg-card)", color: "var(--text-primary)" }}/>
               </div>
               <div className="space-y-1.5">
-                <label className="text-sm font-medium text-gray-700">Date</label>
-                <input
-                  type="date"
-                  value={editForm.expense_date}
-                  onChange={(e) => setEditForm({ ...editForm, expense_date: e.target.value })}
+                <label className="text-sm font-medium" style={{ color: "var(--text-secondary)" }}>Date</label>
+                <input type="date" value={editForm.expense_date} onChange={(e) => setEditForm({ ...editForm, expense_date: e.target.value })}
                   className="w-full h-11 px-3 rounded-xl border text-sm outline-none"
-                  style={{ borderColor: "#E5E7EB" }}
-                />
+                  style={{ borderColor: "var(--border-default)", backgroundColor: "var(--bg-card)", color: "var(--text-primary)" }}/>
               </div>
               <div className="space-y-1.5">
-                <label className="text-sm font-medium text-gray-700">Notes (optional)</label>
-                <input
-                  type="text"
-                  value={editForm.notes}
-                  onChange={(e) => setEditForm({ ...editForm, notes: e.target.value })}
+                <label className="text-sm font-medium" style={{ color: "var(--text-secondary)" }}>Notes (optional)</label>
+                <input type="text" value={editForm.notes} onChange={(e) => setEditForm({ ...editForm, notes: e.target.value })}
                   className="w-full h-11 px-3 rounded-xl border text-sm outline-none"
-                  style={{ borderColor: "#E5E7EB" }}
-                />
+                  style={{ borderColor: "var(--border-default)", backgroundColor: "var(--bg-card)", color: "var(--text-primary)" }}/>
               </div>
-              {error && (
-                <p className="text-sm px-3 py-2 rounded-xl" style={{ backgroundColor: "#FEE2E2", color: "#DC2626" }}>{error}</p>
-              )}
-              <button
-                onClick={handleEditSubmit}
-                disabled={loading || !editForm.title || !editForm.amount}
+              {error && <p className="text-sm px-3 py-2 rounded-xl" style={{ backgroundColor: "var(--bg-danger)", color: "var(--color-loss)" }}>{error}</p>}
+              <button onClick={handleEditSubmit} disabled={loading || !editForm.title || !editForm.amount}
                 className="w-full h-11 rounded-xl text-sm font-semibold text-white disabled:opacity-50 disabled:cursor-not-allowed"
-                style={{ backgroundColor: "#0D3B2E" }}
-              >
+                style={{ backgroundColor: "var(--brand-primary)" }}>
                 {loading ? "Saving…" : "Save changes"}
               </button>
             </div>
@@ -554,40 +486,27 @@ export default function ExpensesClient({
 
       {/* Delete confirm modal */}
       {showDeleteConfirm && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4"
-          style={{ backgroundColor: "rgba(0,0,0,0.4)" }}
-        >
-          <div className="w-full max-w-sm bg-white rounded-2xl overflow-hidden">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ backgroundColor: "rgba(0,0,0,0.5)" }}>
+          <div className="w-full max-w-sm rounded-2xl overflow-hidden" style={{ backgroundColor: "var(--bg-card)" }}>
             <div className="p-6 text-center space-y-4">
-              <div
-                className="w-14 h-14 rounded-full flex items-center justify-center mx-auto"
-                style={{ backgroundColor: "#FEE2E2" }}
-              >
+              <div className="w-14 h-14 rounded-full flex items-center justify-center mx-auto" style={{ backgroundColor: "var(--bg-danger)" }}>
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                  <path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6" stroke="#DC2626" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6" stroke="var(--color-loss)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
               </div>
               <div>
-                <h2 className="text-base font-bold text-gray-900 mb-1">Delete this expense?</h2>
-                <p className="text-sm text-gray-500">
+                <h2 className="text-base font-bold mb-1" style={{ color: "var(--text-primary)" }}>Delete this expense?</h2>
+                <p className="text-sm" style={{ color: "var(--text-muted)" }}>
                   <span className="font-semibold">{showDeleteConfirm.title}</span> — {fmt(Number(showDeleteConfirm.amount))}
                 </p>
               </div>
               <div className="flex gap-3">
-                <button
-                  onClick={() => setShowDeleteConfirm(null)}
-                  className="flex-1 h-11 rounded-xl border text-sm font-semibold"
-                  style={{ borderColor: "#E5E7EB", color: "#6B7280" }}
-                >
+                <button onClick={() => setShowDeleteConfirm(null)} className="flex-1 h-11 rounded-xl border text-sm font-semibold"
+                  style={{ borderColor: "var(--border-default)", color: "var(--text-muted)" }}>
                   Cancel
                 </button>
-                <button
-                  onClick={handleDelete}
-                  disabled={deleteLoading}
-                  className="flex-1 h-11 rounded-xl text-sm font-semibold text-white disabled:opacity-50"
-                  style={{ backgroundColor: "#DC2626" }}
-                >
+                <button onClick={handleDelete} disabled={deleteLoading} className="flex-1 h-11 rounded-xl text-sm font-semibold text-white disabled:opacity-50"
+                  style={{ backgroundColor: "var(--color-danger)" }}>
                   {deleteLoading ? "Deleting…" : "Delete"}
                 </button>
               </div>
@@ -598,8 +517,8 @@ export default function ExpensesClient({
 
       {/* Mobile bottom nav */}
       <nav
-        className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 grid grid-cols-5 z-20"
-        style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+        className="lg:hidden fixed bottom-0 left-0 right-0 border-t grid grid-cols-5 z-20"
+        style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border-subtle)", paddingBottom: "env(safe-area-inset-bottom)" }}
       >
         {[
           { label: "Dashboard", href: "/dashboard" },
@@ -608,12 +527,8 @@ export default function ExpensesClient({
           { label: "Reports", href: "/reports" },
           { label: "More", href: "/settings" },
         ].map((item) => (
-          
-           <a key={item.href}
-            href={item.href}
-            className="flex flex-col items-center justify-center py-3 gap-1"
-            style={{ color: "#9CA3AF" }}
-          >
+          <a key={item.href} href={item.href} className="flex flex-col items-center justify-center py-3 gap-1"
+            style={{ color: "var(--text-faint)" }}>
             <span className="text-xs font-medium">{item.label}</span>
           </a>
         ))}

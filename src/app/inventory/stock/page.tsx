@@ -1,6 +1,6 @@
 import { createSupabaseServerClient } from "@/lib/supabase-server";
 import { redirect } from "next/navigation";
-import Sidebar from "@/components/Sidebar";
+import PageShell from "@/components/PageShell";
 import StockClient from "./StockClient";
 
 interface Props {
@@ -10,7 +10,9 @@ interface Props {
 export default async function StockPage({ searchParams }: Props) {
   const supabase = await createSupabaseServerClient();
 
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
   const { data: profile } = await supabase
@@ -28,7 +30,9 @@ export default async function StockPage({ searchParams }: Props) {
   // Fetch the product
   const { data: product } = await supabase
     .from("products")
-    .select("id, name, brand_id, is_serialized, cost_price, selling_price, quantity, minimum_stock")
+    .select(
+      "id, name, brand_id, is_serialized, cost_price, selling_price, quantity, minimum_stock",
+    )
     .eq("id", productId)
     .single();
 
@@ -49,29 +53,28 @@ export default async function StockPage({ searchParams }: Props) {
   // Fetch stock purchase history
   const { data: purchases } = await supabase
     .from("stock_purchases")
-    .select("id, quantity, unit_cost, total_cost, supplier, purchased_at, notes")
+    .select(
+      "id, quantity, unit_cost, total_cost, supplier, purchased_at, notes",
+    )
     .eq("product_id", productId)
     .order("purchased_at", { ascending: false });
-// Fetch suppliers for autocomplete
+  // Fetch suppliers for autocomplete
   const { data: suppliers } = await supabase
     .from("suppliers")
     .select("id, name")
     .order("name");
   return (
-    <div className="flex h-screen overflow-hidden bg-gray-100">
-      <Sidebar
-        storeName={profile.store_name}
-        fullName={profile.full_name}
-        role={profile.role}
+    <PageShell
+      storeName={profile.store_name}
+      fullName={profile.full_name}
+      role={profile.role}
+    >
+      <StockClient
+        product={{ ...product, brandName: brand?.name ?? "" }}
+        purchases={purchases ?? []}
+        suppliers={suppliers ?? []}
+        profile={profile}
       />
-      <main className="flex-1 overflow-y-auto pb-24 lg:pb-0">
-        <StockClient
-          product={{ ...product, brandName: brand?.name ?? "" }}
-          purchases={purchases ?? []}
-          suppliers={suppliers ?? []}
-          profile={profile}
-        />
-      </main>
-    </div>
+    </PageShell>
   );
 }

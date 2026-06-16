@@ -1,6 +1,6 @@
 import { createSupabaseServerClient } from "@/lib/supabase-server";
 import { redirect } from "next/navigation";
-import Sidebar from "@/components/Sidebar";
+import PageShell from "@/components/PageShell";
 import IMEIClient from "./IMEIClient";
 
 interface Props {
@@ -52,7 +52,7 @@ export default async function IMEIPage({ searchParams }: Props) {
     const { data: items } = await supabase
       .from("stock_items")
       .select(
-       "id, imei, variant, cost_price, status, condition_notes, purchased_at, sold_at, sale_id, image_url",
+        "id, imei, variant, cost_price, status, condition_notes, purchased_at, sold_at, sale_id, image_url",
       )
       .eq("product_id", productId)
       .order("created_at", { ascending: false });
@@ -96,23 +96,20 @@ export default async function IMEIPage({ searchParams }: Props) {
         i.status === "faulty" || i.status === "returned",
     ).length ?? 0;
   return (
-    <div className="flex h-screen overflow-hidden bg-gray-100">
-      <Sidebar
-        storeName={profile.store_name}
-        fullName={profile.full_name}
-        role={profile.role}
+    <PageShell
+      storeName={profile.store_name}
+      fullName={profile.full_name}
+      role={profile.role}
+    >
+      <IMEIClient
+        products={products ?? []}
+        brands={brands ?? []}
+        selectedProduct={selectedProduct}
+        stockItems={stockItems ?? []}
+        stats={{ totalRegistered, inStock, sold, faulty }}
+        profile={profile}
+        initialProductId={productId ?? null}
       />
-      <main className="flex-1 overflow-y-auto pb-24 lg:pb-0">
-        <IMEIClient
-          products={products ?? []}
-          brands={brands ?? []}
-          selectedProduct={selectedProduct}
-          stockItems={stockItems ?? []}
-          stats={{ totalRegistered, inStock, sold, faulty }}
-          profile={profile}
-          initialProductId={productId ?? null}
-        />
-      </main>
-    </div>
+    </PageShell>
   );
 }

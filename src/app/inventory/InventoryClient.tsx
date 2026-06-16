@@ -271,7 +271,7 @@ export default function InventoryClient({ brands, products, profile }: Props) {
       alert("Image must be under 4MB.");
       return;
     }
-   setUploadingId(productId);
+    setUploadingId(productId);
     const timestamp = new Date().getTime();
     try {
       const ext = file.name.split(".").pop();
@@ -299,14 +299,17 @@ export default function InventoryClient({ brands, products, profile }: Props) {
   const selectedBrandName = brands.find((b) => b.id === selectedBrandId)?.name;
 
   return (
-    <div>
+    <div style={{ backgroundColor: "var(--bg-subtle)", minHeight: "100vh" }} className="pb-24 lg:pb-0">
       {/* Top bar */}
-      <div className="sticky top-0 z-10 flex items-center justify-between px-4 lg:px-6 py-4 bg-white border-b border-gray-100">
+      <div
+        className="sticky top-0 z-10 flex items-center justify-between px-4 lg:px-6 py-4 border-b"
+        style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border-subtle)" }}
+      >
         <div className="flex items-center gap-3">
           <MobileMenuButton />
           <div>
-            <h1 className="text-lg font-bold text-gray-900">Inventory</h1>
-            <p className="text-xs text-gray-500 mt-0.5">
+            <h1 className="text-lg font-bold" style={{ color: "var(--text-primary)" }}>Inventory</h1>
+            <p className="text-xs mt-0.5" style={{ color: "var(--text-muted)" }}>
               {totalProducts} product{totalProducts !== 1 ? "s" : ""} · {brands.length} brand{brands.length !== 1 ? "s" : ""}
             </p>
           </div>
@@ -317,14 +320,14 @@ export default function InventoryClient({ brands, products, profile }: Props) {
             <button
               onClick={() => setShowAddProduct(true)}
               className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold text-white"
-              style={{ backgroundColor: "#0D3B2E" }}
+              style={{ backgroundColor: "var(--brand-primary)" }}
             >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-              <path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"/>
-            </svg>
-            Add product
-          </button>
-        )}
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                <path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"/>
+              </svg>
+              Add product
+            </button>
+          )}
         </div>
       </div>
 
@@ -333,12 +336,12 @@ export default function InventoryClient({ brands, products, profile }: Props) {
         {/* Filters */}
         <div className="flex flex-wrap items-center gap-2">
           <div
-            className="flex items-center gap-2 flex-1 min-w-48 h-10 px-3 rounded-xl border bg-white"
-            style={{ borderColor: "#E5E7EB" }}
+            className="flex items-center gap-2 flex-1 min-w-48 h-10 px-3 rounded-xl border"
+            style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border-default)" }}
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-              <circle cx="11" cy="11" r="8" stroke="#9CA3AF" strokeWidth="2"/>
-              <path d="M21 21l-4.35-4.35" stroke="#9CA3AF" strokeWidth="2" strokeLinecap="round"/>
+              <circle cx="11" cy="11" r="8" stroke="var(--text-faint)" strokeWidth="2"/>
+              <path d="M21 21l-4.35-4.35" stroke="var(--text-faint)" strokeWidth="2" strokeLinecap="round"/>
             </svg>
             <input
               type="text"
@@ -346,34 +349,41 @@ export default function InventoryClient({ brands, products, profile }: Props) {
               onChange={(e) => { setSearch(e.target.value); if (e.target.value) setShowProducts(true); }}
               placeholder="Search products..."
               className="flex-1 text-sm outline-none bg-transparent"
+              style={{ color: "var(--text-primary)" }}
             />
           </div>
 
-          {["all", "low", "out"].map((status) => (
-            <button
-              key={status}
-              onClick={() => {
-                if (filterStatus === status && showProducts && !selectedBrandId) {
-                  setShowProducts(false);
-                } else {
-                  setFilterStatus(status as "all" | "low" | "out");
-                  setShowProducts(true);
-                  setSelectedBrandId(null);
-                }
-              }}
-              className="h-10 px-4 rounded-xl text-sm font-medium border transition"
-              style={{
-                backgroundColor: filterStatus === status && showProducts && !selectedBrandId
-                  ? status === "low" ? "#FFF7ED" : status === "out" ? "#FEE2E2" : "#E1F5EE" : "#fff",
-                borderColor: filterStatus === status && showProducts && !selectedBrandId
-                  ? status === "low" ? "#FED7AA" : status === "out" ? "#FCA5A5" : "#5DCAA5" : "#E5E7EB",
-                color: filterStatus === status && showProducts && !selectedBrandId
-                  ? status === "low" ? "#9A3412" : status === "out" ? "#7F1D1D" : "#0F6E56" : "#6B7280",
-              }}
-            >
-              {status === "all" ? `All (${products.length})` : status === "low" ? `Low stock (${lowStockCount})` : "Out of stock"}
-            </button>
-          ))}
+          {["all", "low", "out"].map((status) => {
+            const isActive = filterStatus === status && showProducts && !selectedBrandId;
+            return (
+              <button
+                key={status}
+                onClick={() => {
+                  if (filterStatus === status && showProducts && !selectedBrandId) {
+                    setShowProducts(false);
+                  } else {
+                    setFilterStatus(status as "all" | "low" | "out");
+                    setShowProducts(true);
+                    setSelectedBrandId(null);
+                  }
+                }}
+                className="h-10 px-4 rounded-xl text-sm font-medium border transition"
+                style={{
+                  backgroundColor: isActive
+                    ? status === "low" ? "var(--bg-warning)" : status === "out" ? "var(--bg-danger)" : "var(--bg-green)"
+                    : "var(--bg-card)",
+                  borderColor: isActive
+                    ? status === "low" ? "var(--border-warning)" : status === "out" ? "var(--color-danger)" : "var(--brand-light)"
+                    : "var(--border-default)",
+                  color: isActive
+                    ? status === "low" ? "var(--color-warning-dark)" : status === "out" ? "var(--color-loss)" : "var(--brand-dark)"
+                    : "var(--text-muted)",
+                }}
+              >
+                {status === "all" ? `All (${products.length})` : status === "low" ? `Low stock (${lowStockCount})` : "Out of stock"}
+              </button>
+            );
+          })}
         </div>
 
         {/* Brand cards */}
@@ -391,21 +401,29 @@ export default function InventoryClient({ brands, products, profile }: Props) {
                     else { setSelectedBrandId(brand.id); setShowProducts(true); setFilterStatus("all"); }
                   }}
                   className="text-left p-4 rounded-2xl border-2 transition"
-                  style={{ borderColor: isSelected ? "#1D9E75" : "#F3F4F6", backgroundColor: isSelected ? "#F0FAF6" : "#fff" }}
+                  style={{
+                    borderColor: isSelected ? "var(--brand-mid)" : "var(--border-subtle)",
+                    backgroundColor: isSelected ? "var(--bg-green-light)" : "var(--bg-card)",
+                  }}
                 >
-                  <div className="w-10 h-10 rounded-xl flex items-center justify-center text-base font-bold mb-3"
-                    style={{ backgroundColor: color.bg, color: color.text }}>
+                  <div
+                    className="w-10 h-10 rounded-xl flex items-center justify-center text-base font-bold mb-3"
+                    style={{ backgroundColor: color.bg, color: color.text }}
+                  >
                     {brand.name[0].toUpperCase()}
                   </div>
-                  <div className="text-sm font-bold text-gray-900 mb-1">{brand.name}</div>
-                  <div className="text-xs font-semibold" style={{ color: "#1D9E75" }}>
+                  <div className="text-sm font-bold mb-1" style={{ color: "var(--text-primary)" }}>{brand.name}</div>
+                  <div className="text-xs font-semibold" style={{ color: "var(--brand-mid)" }}>
                     {stats.units} unit{stats.units !== 1 ? "s" : ""} in stock
                   </div>
-                  <div className="text-xs text-gray-400 mt-0.5">
+                  <div className="text-xs mt-0.5" style={{ color: "var(--text-faint)" }}>
                     {stats.models} model{stats.models !== 1 ? "s" : ""} · {fmtShort(stats.value)} value
                   </div>
-                  <div className="mt-3 h-1 rounded-full overflow-hidden" style={{ backgroundColor: "#F3F4F6" }}>
-                    <div className="h-full rounded-full" style={{ backgroundColor: isSelected ? "#1D9E75" : color.text, width: "100%" }}/>
+                  <div className="mt-3 h-1 rounded-full overflow-hidden" style={{ backgroundColor: "var(--border-subtle)" }}>
+                    <div
+                      className="h-full rounded-full"
+                      style={{ backgroundColor: isSelected ? "var(--brand-mid)" : color.text, width: "100%" }}
+                    />
                   </div>
                 </button>
               );
@@ -416,13 +434,13 @@ export default function InventoryClient({ brands, products, profile }: Props) {
         {/* Selected brand label */}
         {selectedBrandId && selectedBrandName && (
           <div className="flex items-center justify-between">
-            <p className="text-sm font-semibold text-gray-700">
+            <p className="text-sm font-semibold" style={{ color: "var(--text-secondary)" }}>
               {selectedBrandName} — {filtered.length} model{filtered.length !== 1 ? "s" : ""}
             </p>
             <button
               onClick={() => { setSelectedBrandId(null); setShowProducts(false); }}
               className="text-xs font-medium flex items-center gap-1"
-              style={{ color: "#6B7280" }}
+              style={{ color: "var(--text-muted)" }}
             >
               Clear
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
@@ -434,28 +452,32 @@ export default function InventoryClient({ brands, products, profile }: Props) {
 
         {/* Product grid */}
         {!showProducts && !search ? (
-          <div className="bg-white rounded-2xl border border-gray-100 p-10 text-center">
-            <div className="w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4" style={{ backgroundColor: "#E1F5EE" }}>
+          <div className="rounded-2xl border p-10 text-center" style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border-subtle)" }}>
+            <div className="w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4" style={{ backgroundColor: "var(--bg-green)" }}>
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                <path d="M3 9l9-6 9 6v11a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" stroke="#1D9E75" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M3 9l9-6 9 6v11a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" stroke="var(--brand-mid)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
             </div>
-            <p className="text-sm font-semibold text-gray-900 mb-1">
+            <p className="text-sm font-semibold mb-1" style={{ color: "var(--text-primary)" }}>
               {products.length === 0 ? "No products yet" : "Select a brand or filter to view products"}
             </p>
-            <p className="text-xs text-gray-400 mb-4">
+            <p className="text-xs mb-4" style={{ color: "var(--text-faint)" }}>
               {products.length === 0 ? "Add your first product to get started" : "Click any brand card above or use the filters to browse your inventory"}
             </p>
             {products.length === 0 && isOwner && (
-              <button onClick={() => setShowAddProduct(true)} className="px-5 py-2.5 rounded-xl text-sm font-semibold text-white" style={{ backgroundColor: "#0D3B2E" }}>
+              <button
+                onClick={() => setShowAddProduct(true)}
+                className="px-5 py-2.5 rounded-xl text-sm font-semibold text-white"
+                style={{ backgroundColor: "var(--brand-primary)" }}
+              >
                 Add first product
               </button>
             )}
           </div>
         ) : filtered.length === 0 ? (
-          <div className="bg-white rounded-2xl border border-gray-100 p-12 text-center">
-            <p className="text-sm font-semibold text-gray-900 mb-1">No products match your filter</p>
-            <p className="text-xs text-gray-400">Try changing your search or filter</p>
+          <div className="rounded-2xl border p-12 text-center" style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border-subtle)" }}>
+            <p className="text-sm font-semibold mb-1" style={{ color: "var(--text-primary)" }}>No products match your filter</p>
+            <p className="text-xs" style={{ color: "var(--text-faint)" }}>Try changing your search or filter</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -469,15 +491,18 @@ export default function InventoryClient({ brands, products, profile }: Props) {
               return (
                 <div
                   key={product.id}
-                  className="bg-white rounded-2xl border overflow-hidden"
-                  style={{ borderColor: isLow || isOut ? "#FED7AA" : "#F3F4F6" }}
+                  className="rounded-2xl border overflow-hidden"
+                  style={{
+                    backgroundColor: "var(--bg-card)",
+                    borderColor: isLow || isOut ? "var(--border-warning)" : "var(--border-subtle)",
+                  }}
                 >
-                  {/* Image area with hover upload */}
+                  {/* Image area */}
                   <div
                     className="h-24 relative flex items-center justify-center text-3xl font-bold overflow-hidden group"
                     style={{
-                      backgroundColor: isOut ? "#FEE2E2" : isLow ? "#FFF7ED" : color.bg,
-                      color: isOut ? "#DC2626" : isLow ? "#F97316" : color.text,
+                      backgroundColor: isOut ? "var(--bg-danger)" : isLow ? "var(--bg-warning)" : color.bg,
+                      color: isOut ? "var(--color-loss)" : isLow ? "var(--color-orange)" : color.text,
                     }}
                   >
                     {product.image_url ? (
@@ -512,19 +537,19 @@ export default function InventoryClient({ brands, products, profile }: Props) {
 
                   <div className="p-4">
                     <div className="mb-1">
-                      <p className="text-sm font-bold text-gray-900 truncate">{product.name}</p>
-                      <p className="text-xs text-gray-400 mt-0.5">{brandName} · {product.category}</p>
+                      <p className="text-sm font-bold truncate" style={{ color: "var(--text-primary)" }}>{product.name}</p>
+                      <p className="text-xs mt-0.5" style={{ color: "var(--text-faint)" }}>{brandName} · {product.category}</p>
                     </div>
 
                     <div className="flex items-center justify-between mt-3">
-                      <span className="text-base font-bold" style={{ color: "#0F6E56" }}>
+                      <span className="text-base font-bold" style={{ color: "var(--brand-dark)" }}>
                         {fmt(Number(product.selling_price))}
                       </span>
                       <span
                         className="text-xs font-semibold px-2.5 py-1 rounded-full"
                         style={{
-                          backgroundColor: isOut ? "#FEE2E2" : isLow ? "#FFF7ED" : "#E1F5EE",
-                          color: isOut ? "#DC2626" : isLow ? "#9A3412" : "#0F6E56",
+                          backgroundColor: isOut ? "var(--bg-danger)" : isLow ? "var(--bg-warning)" : "var(--bg-green)",
+                          color: isOut ? "var(--color-loss)" : isLow ? "var(--color-warning-dark)" : "var(--brand-dark)",
                         }}
                       >
                         {isOut ? "Out of stock" : isLow ? `${product.currentStock} left` : `${product.currentStock} in stock`}
@@ -532,7 +557,7 @@ export default function InventoryClient({ brands, products, profile }: Props) {
                     </div>
 
                     {isLow && (
-                      <p className="text-xs mt-1.5" style={{ color: "#C2410C" }}>
+                      <p className="text-xs mt-1.5" style={{ color: "var(--color-warning-text)" }}>
                         Min: {product.minimum_stock} · Restock needed
                       </p>
                     )}
@@ -542,7 +567,7 @@ export default function InventoryClient({ brands, products, profile }: Props) {
                         <button
                           onClick={() => openEditModal(product)}
                           className="h-9 px-3 rounded-xl border text-xs font-semibold transition"
-                          style={{ borderColor: "#E5E7EB", color: "#374151" }}
+                          style={{ borderColor: "var(--border-default)", color: "var(--text-secondary)" }}
                         >
                           Edit
                         </button>
@@ -551,7 +576,7 @@ export default function InventoryClient({ brands, products, profile }: Props) {
                         <button
                           onClick={() => router.push(`/imei?product=${product.id}`)}
                           className="flex-1 h-9 rounded-xl border text-xs font-semibold transition"
-                          style={{ borderColor: "#E5E7EB", color: "#374151" }}
+                          style={{ borderColor: "var(--border-default)", color: "var(--text-secondary)" }}
                         >
                           IMEIs
                         </button>
@@ -559,7 +584,7 @@ export default function InventoryClient({ brands, products, profile }: Props) {
                       <button
                         onClick={() => router.push(`/inventory/stock?product=${product.id}`)}
                         className="flex-1 h-9 rounded-xl text-xs font-semibold text-white transition"
-                        style={{ backgroundColor: "#0D3B2E" }}
+                        style={{ backgroundColor: "var(--brand-primary)" }}
                       >
                         {isOut || isLow ? "+ Restock" : "+ Stock"}
                       </button>
@@ -569,7 +594,7 @@ export default function InventoryClient({ brands, products, profile }: Props) {
                       <button
                         onClick={() => setShowDeleteConfirm(product)}
                         className="w-full mt-2 h-8 rounded-xl text-xs font-medium transition"
-                        style={{ color: "#DC2626", backgroundColor: "#FFF5F5" }}
+                        style={{ color: "var(--color-loss)", backgroundColor: "var(--bg-danger-light)" }}
                       >
                         Delete product
                       </button>
@@ -584,21 +609,23 @@ export default function InventoryClient({ brands, products, profile }: Props) {
 
       {/* Add product modal */}
       {showAddProduct && (
-        <div className="fixed inset-0 z-50 flex items-end lg:items-center justify-center p-4" style={{ backgroundColor: "rgba(0,0,0,0.4)" }}>
-          <div className="w-full max-w-md bg-white rounded-2xl overflow-hidden max-h-screen overflow-y-auto">
-            <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
-              <h2 className="text-base font-bold text-gray-900">Add new product</h2>
-              <button onClick={() => { setShowAddProduct(false); setError(null); }} className="w-8 h-8 flex items-center justify-center rounded-lg" style={{ color: "#6B7280" }}>
+        <div className="fixed inset-0 z-50 flex items-end lg:items-center justify-center p-4" style={{ backgroundColor: "rgba(0,0,0,0.5)" }}>
+          <div className="w-full max-w-md rounded-2xl overflow-hidden max-h-screen overflow-y-auto" style={{ backgroundColor: "var(--bg-card)" }}>
+            <div className="flex items-center justify-between px-5 py-4 border-b" style={{ borderColor: "var(--border-subtle)" }}>
+              <h2 className="text-base font-bold" style={{ color: "var(--text-primary)" }}>Add new product</h2>
+              <button onClick={() => { setShowAddProduct(false); setError(null); }} className="w-8 h-8 flex items-center justify-center rounded-lg" style={{ color: "var(--text-muted)" }}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M18 6L6 18M6 6l12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>
               </button>
             </div>
             <div className="p-5 space-y-4">
               <div className="space-y-1.5">
-                <label className="text-sm font-medium text-gray-700">Product name</label>
-                <input type="text" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="e.g. iPhone 15 Pro" className="w-full h-11 px-3 rounded-xl border text-sm outline-none" style={{ borderColor: form.name ? "#1D9E75" : "#E5E7EB" }}/>
+                <label className="text-sm font-medium" style={{ color: "var(--text-secondary)" }}>Product name</label>
+                <input type="text" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="e.g. iPhone 15 Pro"
+                  className="w-full h-11 px-3 rounded-xl border text-sm outline-none"
+                  style={{ borderColor: form.name ? "var(--brand-mid)" : "var(--border-default)", backgroundColor: "var(--bg-card)", color: "var(--text-primary)" }}/>
               </div>
               <div className="space-y-1.5 relative">
-                <label className="text-sm font-medium text-gray-700">Brand</label>
+                <label className="text-sm font-medium" style={{ color: "var(--text-secondary)" }}>Brand</label>
                 <input
                   type="text" value={form.brandName}
                   onChange={(e) => { setForm({ ...form, brandName: e.target.value, brandId: "" }); setShowBrandSuggestions(true); }}
@@ -606,49 +633,66 @@ export default function InventoryClient({ brands, products, profile }: Props) {
                   onBlur={() => setTimeout(() => setShowBrandSuggestions(false), 150)}
                   placeholder="e.g. Apple, Tecno, Samsung"
                   className="w-full h-11 px-3 rounded-xl border text-sm outline-none"
-                  style={{ borderColor: form.brandName ? "#1D9E75" : "#E5E7EB" }}
+                  style={{ borderColor: form.brandName ? "var(--brand-mid)" : "var(--border-default)", backgroundColor: "var(--bg-card)", color: "var(--text-primary)" }}
                 />
                 {showBrandSuggestions && brandSuggestions.length > 0 && (
-                  <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-xl border border-gray-200 shadow-lg z-10 overflow-hidden">
+                  <div className="absolute top-full left-0 right-0 mt-1 rounded-xl border shadow-lg z-10 overflow-hidden"
+                    style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border-default)" }}>
                     {brandSuggestions.map((b) => (
-                      <button key={b.id} onMouseDown={() => { setForm({ ...form, brandName: b.name, brandId: b.id }); setShowBrandSuggestions(false); }} className="w-full text-left px-4 py-2.5 text-sm hover:bg-gray-50 transition" style={{ color: "#374151" }}>{b.name}</button>
+                      <button key={b.id} onMouseDown={() => { setForm({ ...form, brandName: b.name, brandId: b.id }); setShowBrandSuggestions(false); }}
+                        className="w-full text-left px-4 py-2.5 text-sm transition"
+                        style={{ color: "var(--text-secondary)" }}>{b.name}</button>
                     ))}
                   </div>
                 )}
-                {form.brandName && !form.brandId && <p className="text-xs" style={{ color: "#0F6E56" }}>New brand &quot;{form.brandName}&quot; will be created</p>}
+                {form.brandName && !form.brandId && (
+                  <p className="text-xs" style={{ color: "var(--brand-dark)" }}>New brand &quot;{form.brandName}&quot; will be created</p>
+                )}
               </div>
               <div className="space-y-1.5">
-                <label className="text-sm font-medium text-gray-700">Category</label>
-                <select value={form.category} onChange={(e) => { const cat = e.target.value; setForm({ ...form, category: cat, isSerialized: cat === "Smartphones" || cat === "Smart Watches" }); }} className="w-full h-11 px-3 rounded-xl border text-sm outline-none bg-white" style={{ borderColor: "#E5E7EB" }}>
+                <label className="text-sm font-medium" style={{ color: "var(--text-secondary)" }}>Category</label>
+                <select value={form.category} onChange={(e) => { const cat = e.target.value; setForm({ ...form, category: cat, isSerialized: cat === "Smartphones" || cat === "Smart Watches" }); }}
+                  className="w-full h-11 px-3 rounded-xl border text-sm outline-none"
+                  style={{ borderColor: "var(--border-default)", backgroundColor: "var(--bg-card)", color: "var(--text-primary)" }}>
                   {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
                 </select>
               </div>
-              <div className="flex items-center justify-between py-3 px-4 rounded-xl" style={{ backgroundColor: "#F9FAFB" }}>
+              <div className="flex items-center justify-between py-3 px-4 rounded-xl" style={{ backgroundColor: "var(--bg-subtle)" }}>
                 <div>
-                  <p className="text-sm font-medium text-gray-900">Track by IMEI</p>
-                  <p className="text-xs text-gray-500 mt-0.5">{form.isSerialized ? "Each unit tracked individually" : "Tracked by quantity"}</p>
+                  <p className="text-sm font-medium" style={{ color: "var(--text-primary)" }}>Track by IMEI</p>
+                  <p className="text-xs mt-0.5" style={{ color: "var(--text-muted)" }}>{form.isSerialized ? "Each unit tracked individually" : "Tracked by quantity"}</p>
                 </div>
-                <button onClick={() => setForm({ ...form, isSerialized: !form.isSerialized })} className="w-11 h-6 rounded-full transition-all relative" style={{ backgroundColor: form.isSerialized ? "#1D9E75" : "#D1D5DB" }}>
+                <button onClick={() => setForm({ ...form, isSerialized: !form.isSerialized })}
+                  className="w-11 h-6 rounded-full transition-all relative flex-shrink-0"
+                  style={{ backgroundColor: form.isSerialized ? "var(--brand-mid)" : "var(--border-strong)" }}>
                   <div className="w-5 h-5 bg-white rounded-full absolute top-0.5 transition-all" style={{ left: form.isSerialized ? "22px" : "2px" }}/>
                 </button>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
-                  <label className="text-sm font-medium text-gray-700">Cost price (₦)</label>
-                  <input type="number" value={form.costPrice} onChange={(e) => setForm({ ...form, costPrice: e.target.value })} placeholder="0" className="w-full h-11 px-3 rounded-xl border text-sm outline-none" style={{ borderColor: "#E5E7EB" }}/>
+                  <label className="text-sm font-medium" style={{ color: "var(--text-secondary)" }}>Cost price (₦)</label>
+                  <input type="number" value={form.costPrice} onChange={(e) => setForm({ ...form, costPrice: e.target.value })} placeholder="0"
+                    className="w-full h-11 px-3 rounded-xl border text-sm outline-none"
+                    style={{ borderColor: "var(--border-default)", backgroundColor: "var(--bg-card)", color: "var(--text-primary)" }}/>
                 </div>
                 <div className="space-y-1.5">
-                  <label className="text-sm font-medium text-gray-700">Selling price (₦)</label>
-                  <input type="number" value={form.sellingPrice} onChange={(e) => setForm({ ...form, sellingPrice: e.target.value })} placeholder="0" className="w-full h-11 px-3 rounded-xl border text-sm outline-none" style={{ borderColor: form.sellingPrice ? "#1D9E75" : "#E5E7EB" }}/>
+                  <label className="text-sm font-medium" style={{ color: "var(--text-secondary)" }}>Selling price (₦)</label>
+                  <input type="number" value={form.sellingPrice} onChange={(e) => setForm({ ...form, sellingPrice: e.target.value })} placeholder="0"
+                    className="w-full h-11 px-3 rounded-xl border text-sm outline-none"
+                    style={{ borderColor: form.sellingPrice ? "var(--brand-mid)" : "var(--border-default)", backgroundColor: "var(--bg-card)", color: "var(--text-primary)" }}/>
                 </div>
               </div>
               <div className="space-y-1.5">
-                <label className="text-sm font-medium text-gray-700">Minimum stock threshold</label>
-                <input type="number" value={form.minimumStock} onChange={(e) => setForm({ ...form, minimumStock: e.target.value })} placeholder="5" className="w-full h-11 px-3 rounded-xl border text-sm outline-none" style={{ borderColor: "#E5E7EB" }}/>
-                <p className="text-xs text-gray-400">You&apos;ll get a low stock alert when stock falls below this number</p>
+                <label className="text-sm font-medium" style={{ color: "var(--text-secondary)" }}>Minimum stock threshold</label>
+                <input type="number" value={form.minimumStock} onChange={(e) => setForm({ ...form, minimumStock: e.target.value })} placeholder="5"
+                  className="w-full h-11 px-3 rounded-xl border text-sm outline-none"
+                  style={{ borderColor: "var(--border-default)", backgroundColor: "var(--bg-card)", color: "var(--text-primary)" }}/>
+                <p className="text-xs" style={{ color: "var(--text-faint)" }}>You&apos;ll get a low stock alert when stock falls below this number</p>
               </div>
-              {error && <p className="text-sm px-3 py-2 rounded-xl" style={{ backgroundColor: "#FEE2E2", color: "#DC2626" }}>{error}</p>}
-              <button onClick={handleAddProduct} disabled={loading || !form.name || !form.brandName || !form.sellingPrice} className="w-full h-11 rounded-xl text-sm font-semibold text-white disabled:opacity-50 disabled:cursor-not-allowed" style={{ backgroundColor: "#0D3B2E" }}>
+              {error && <p className="text-sm px-3 py-2 rounded-xl" style={{ backgroundColor: "var(--bg-danger)", color: "var(--color-loss)" }}>{error}</p>}
+              <button onClick={handleAddProduct} disabled={loading || !form.name || !form.brandName || !form.sellingPrice}
+                className="w-full h-11 rounded-xl text-sm font-semibold text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                style={{ backgroundColor: "var(--brand-primary)" }}>
                 {loading ? "Adding product…" : "Add product"}
               </button>
             </div>
@@ -658,59 +702,74 @@ export default function InventoryClient({ brands, products, profile }: Props) {
 
       {/* Edit product modal */}
       {showEditProduct && (
-        <div className="fixed inset-0 z-50 flex items-end lg:items-center justify-center p-4" style={{ backgroundColor: "rgba(0,0,0,0.4)" }}>
-          <div className="w-full max-w-md bg-white rounded-2xl overflow-hidden max-h-screen overflow-y-auto">
-            <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
-              <h2 className="text-base font-bold text-gray-900">Edit product</h2>
-              <button onClick={() => { setShowEditProduct(null); setError(null); }} className="w-8 h-8 flex items-center justify-center rounded-lg" style={{ color: "#6B7280" }}>
+        <div className="fixed inset-0 z-50 flex items-end lg:items-center justify-center p-4" style={{ backgroundColor: "rgba(0,0,0,0.5)" }}>
+          <div className="w-full max-w-md rounded-2xl overflow-hidden max-h-screen overflow-y-auto" style={{ backgroundColor: "var(--bg-card)" }}>
+            <div className="flex items-center justify-between px-5 py-4 border-b" style={{ borderColor: "var(--border-subtle)" }}>
+              <h2 className="text-base font-bold" style={{ color: "var(--text-primary)" }}>Edit product</h2>
+              <button onClick={() => { setShowEditProduct(null); setError(null); }} className="w-8 h-8 flex items-center justify-center rounded-lg" style={{ color: "var(--text-muted)" }}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M18 6L6 18M6 6l12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>
               </button>
             </div>
             <div className="p-5 space-y-4">
               <div className="space-y-1.5">
-                <label className="text-sm font-medium text-gray-700">Product name</label>
-                <input type="text" value={editForm.name} onChange={(e) => setEditForm({ ...editForm, name: e.target.value })} className="w-full h-11 px-3 rounded-xl border text-sm outline-none" style={{ borderColor: editForm.name ? "#1D9E75" : "#E5E7EB" }}/>
+                <label className="text-sm font-medium" style={{ color: "var(--text-secondary)" }}>Product name</label>
+                <input type="text" value={editForm.name} onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+                  className="w-full h-11 px-3 rounded-xl border text-sm outline-none"
+                  style={{ borderColor: editForm.name ? "var(--brand-mid)" : "var(--border-default)", backgroundColor: "var(--bg-card)", color: "var(--text-primary)" }}/>
               </div>
               <div className="space-y-1.5 relative">
-                <label className="text-sm font-medium text-gray-700">Brand</label>
+                <label className="text-sm font-medium" style={{ color: "var(--text-secondary)" }}>Brand</label>
                 <input
                   type="text" value={editForm.brandName}
                   onChange={(e) => { setEditForm({ ...editForm, brandName: e.target.value, brandId: "" }); setShowEditBrandSuggestions(true); }}
                   onFocus={() => setShowEditBrandSuggestions(true)}
                   onBlur={() => setTimeout(() => setShowEditBrandSuggestions(false), 150)}
                   className="w-full h-11 px-3 rounded-xl border text-sm outline-none"
-                  style={{ borderColor: editForm.brandName ? "#1D9E75" : "#E5E7EB" }}
+                  style={{ borderColor: editForm.brandName ? "var(--brand-mid)" : "var(--border-default)", backgroundColor: "var(--bg-card)", color: "var(--text-primary)" }}
                 />
                 {showEditBrandSuggestions && editBrandSuggestions.length > 0 && (
-                  <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-xl border border-gray-200 shadow-lg z-10 overflow-hidden">
+                  <div className="absolute top-full left-0 right-0 mt-1 rounded-xl border shadow-lg z-10 overflow-hidden"
+                    style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border-default)" }}>
                     {editBrandSuggestions.map((b) => (
-                      <button key={b.id} onMouseDown={() => { setEditForm({ ...editForm, brandName: b.name, brandId: b.id }); setShowEditBrandSuggestions(false); }} className="w-full text-left px-4 py-2.5 text-sm hover:bg-gray-50 transition" style={{ color: "#374151" }}>{b.name}</button>
+                      <button key={b.id} onMouseDown={() => { setEditForm({ ...editForm, brandName: b.name, brandId: b.id }); setShowEditBrandSuggestions(false); }}
+                        className="w-full text-left px-4 py-2.5 text-sm transition"
+                        style={{ color: "var(--text-secondary)" }}>{b.name}</button>
                     ))}
                   </div>
                 )}
               </div>
               <div className="space-y-1.5">
-                <label className="text-sm font-medium text-gray-700">Category</label>
-                <select value={editForm.category} onChange={(e) => setEditForm({ ...editForm, category: e.target.value })} className="w-full h-11 px-3 rounded-xl border text-sm outline-none bg-white" style={{ borderColor: "#E5E7EB" }}>
+                <label className="text-sm font-medium" style={{ color: "var(--text-secondary)" }}>Category</label>
+                <select value={editForm.category} onChange={(e) => setEditForm({ ...editForm, category: e.target.value })}
+                  className="w-full h-11 px-3 rounded-xl border text-sm outline-none"
+                  style={{ borderColor: "var(--border-default)", backgroundColor: "var(--bg-card)", color: "var(--text-primary)" }}>
                   {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
                 </select>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
-                  <label className="text-sm font-medium text-gray-700">Cost price (₦)</label>
-                  <input type="number" value={editForm.costPrice} onChange={(e) => setEditForm({ ...editForm, costPrice: e.target.value })} className="w-full h-11 px-3 rounded-xl border text-sm outline-none" style={{ borderColor: "#E5E7EB" }}/>
+                  <label className="text-sm font-medium" style={{ color: "var(--text-secondary)" }}>Cost price (₦)</label>
+                  <input type="number" value={editForm.costPrice} onChange={(e) => setEditForm({ ...editForm, costPrice: e.target.value })}
+                    className="w-full h-11 px-3 rounded-xl border text-sm outline-none"
+                    style={{ borderColor: "var(--border-default)", backgroundColor: "var(--bg-card)", color: "var(--text-primary)" }}/>
                 </div>
                 <div className="space-y-1.5">
-                  <label className="text-sm font-medium text-gray-700">Selling price (₦)</label>
-                  <input type="number" value={editForm.sellingPrice} onChange={(e) => setEditForm({ ...editForm, sellingPrice: e.target.value })} className="w-full h-11 px-3 rounded-xl border text-sm outline-none" style={{ borderColor: editForm.sellingPrice ? "#1D9E75" : "#E5E7EB" }}/>
+                  <label className="text-sm font-medium" style={{ color: "var(--text-secondary)" }}>Selling price (₦)</label>
+                  <input type="number" value={editForm.sellingPrice} onChange={(e) => setEditForm({ ...editForm, sellingPrice: e.target.value })}
+                    className="w-full h-11 px-3 rounded-xl border text-sm outline-none"
+                    style={{ borderColor: editForm.sellingPrice ? "var(--brand-mid)" : "var(--border-default)", backgroundColor: "var(--bg-card)", color: "var(--text-primary)" }}/>
                 </div>
               </div>
               <div className="space-y-1.5">
-                <label className="text-sm font-medium text-gray-700">Minimum stock threshold</label>
-                <input type="number" value={editForm.minimumStock} onChange={(e) => setEditForm({ ...editForm, minimumStock: e.target.value })} className="w-full h-11 px-3 rounded-xl border text-sm outline-none" style={{ borderColor: "#E5E7EB" }}/>
+                <label className="text-sm font-medium" style={{ color: "var(--text-secondary)" }}>Minimum stock threshold</label>
+                <input type="number" value={editForm.minimumStock} onChange={(e) => setEditForm({ ...editForm, minimumStock: e.target.value })}
+                  className="w-full h-11 px-3 rounded-xl border text-sm outline-none"
+                  style={{ borderColor: "var(--border-default)", backgroundColor: "var(--bg-card)", color: "var(--text-primary)" }}/>
               </div>
-              {error && <p className="text-sm px-3 py-2 rounded-xl" style={{ backgroundColor: "#FEE2E2", color: "#DC2626" }}>{error}</p>}
-              <button onClick={handleEditProduct} disabled={loading || !editForm.name || !editForm.brandName || !editForm.sellingPrice} className="w-full h-11 rounded-xl text-sm font-semibold text-white disabled:opacity-50 disabled:cursor-not-allowed" style={{ backgroundColor: "#0D3B2E" }}>
+              {error && <p className="text-sm px-3 py-2 rounded-xl" style={{ backgroundColor: "var(--bg-danger)", color: "var(--color-loss)" }}>{error}</p>}
+              <button onClick={handleEditProduct} disabled={loading || !editForm.name || !editForm.brandName || !editForm.sellingPrice}
+                className="w-full h-11 rounded-xl text-sm font-semibold text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                style={{ backgroundColor: "var(--brand-primary)" }}>
                 {loading ? "Saving…" : "Save changes"}
               </button>
             </div>
@@ -720,21 +779,23 @@ export default function InventoryClient({ brands, products, profile }: Props) {
 
       {/* Delete confirm modal */}
       {showDeleteConfirm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ backgroundColor: "rgba(0,0,0,0.4)" }}>
-          <div className="w-full max-w-sm bg-white rounded-2xl overflow-hidden">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ backgroundColor: "rgba(0,0,0,0.5)" }}>
+          <div className="w-full max-w-sm rounded-2xl overflow-hidden" style={{ backgroundColor: "var(--bg-card)" }}>
             <div className="p-6 text-center space-y-4">
-              <div className="w-14 h-14 rounded-full flex items-center justify-center mx-auto" style={{ backgroundColor: "#FEE2E2" }}>
+              <div className="w-14 h-14 rounded-full flex items-center justify-center mx-auto" style={{ backgroundColor: "var(--bg-danger)" }}>
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                  <path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6" stroke="#DC2626" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6" stroke="var(--color-loss)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
               </div>
               <div>
-                <h2 className="text-base font-bold text-gray-900 mb-1">Delete {showDeleteConfirm.name}?</h2>
-                <p className="text-sm text-gray-500">This product will be removed from your inventory. Sales history will be preserved.</p>
+                <h2 className="text-base font-bold mb-1" style={{ color: "var(--text-primary)" }}>Delete {showDeleteConfirm.name}?</h2>
+                <p className="text-sm" style={{ color: "var(--text-muted)" }}>This product will be removed from your inventory. Sales history will be preserved.</p>
               </div>
               <div className="flex gap-3">
-                <button onClick={() => setShowDeleteConfirm(null)} className="flex-1 h-11 rounded-xl border text-sm font-semibold" style={{ borderColor: "#E5E7EB", color: "#6B7280" }}>Cancel</button>
-                <button onClick={handleDeleteProduct} disabled={deleteLoading} className="flex-1 h-11 rounded-xl text-sm font-semibold text-white disabled:opacity-50" style={{ backgroundColor: "#DC2626" }}>
+                <button onClick={() => setShowDeleteConfirm(null)} className="flex-1 h-11 rounded-xl border text-sm font-semibold"
+                  style={{ borderColor: "var(--border-default)", color: "var(--text-muted)" }}>Cancel</button>
+                <button onClick={handleDeleteProduct} disabled={deleteLoading} className="flex-1 h-11 rounded-xl text-sm font-semibold text-white disabled:opacity-50"
+                  style={{ backgroundColor: "var(--color-danger)" }}>
                   {deleteLoading ? "Deleting…" : "Delete"}
                 </button>
               </div>
@@ -744,7 +805,10 @@ export default function InventoryClient({ brands, products, profile }: Props) {
       )}
 
       {/* Mobile bottom nav */}
-      <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 grid grid-cols-5 z-20" style={{ paddingBottom: "env(safe-area-inset-bottom)" }}>
+      <nav
+        className="lg:hidden fixed bottom-0 left-0 right-0 border-t grid grid-cols-5 z-20"
+        style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border-subtle)", paddingBottom: "env(safe-area-inset-bottom)" }}
+      >
         {[
           { label: "Dashboard", href: "/dashboard" },
           { label: "Inventory", href: "/inventory", active: true },
@@ -752,9 +816,10 @@ export default function InventoryClient({ brands, products, profile }: Props) {
           { label: "Reports", href: "/reports" },
           { label: "More", href: "/settings" },
         ].map((item) => (
-          <a key={item.href} href={item.href} className="flex flex-col items-center justify-center py-3 gap-1" style={{ color: item.active ? "#0D3B2E" : "#9CA3AF" }}>
+          <a key={item.href} href={item.href} className="flex flex-col items-center justify-center py-3 gap-1"
+            style={{ color: item.active ? "var(--brand-primary)" : "var(--text-faint)" }}>
             <span className="text-xs font-medium">{item.label}</span>
-            {item.active && <div className="w-1 h-1 rounded-full" style={{ backgroundColor: "#0D3B2E" }}/>}
+            {item.active && <div className="w-1 h-1 rounded-full" style={{ backgroundColor: "var(--brand-primary)" }}/>}
           </a>
         ))}
       </nav>

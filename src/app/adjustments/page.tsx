@@ -1,12 +1,14 @@
 import { createSupabaseServerClient } from "@/lib/supabase-server";
 import { redirect } from "next/navigation";
-import Sidebar from "@/components/Sidebar";
+import PageShell from "@/components/PageShell";
 import AdjustmentsClient from "./AdjustmentsClient";
 
 export default async function AdjustmentsPage() {
   const supabase = await createSupabaseServerClient();
 
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
   const { data: profile } = await supabase
@@ -26,9 +28,7 @@ export default async function AdjustmentsPage() {
     .order("name");
 
   // Fetch brands
-  const { data: brands } = await supabase
-    .from("brands")
-    .select("id, name");
+  const { data: brands } = await supabase.from("brands").select("id, name");
 
   // Fetch recent adjustments
   const { data: adjustments } = await supabase
@@ -54,20 +54,17 @@ export default async function AdjustmentsPage() {
   }));
 
   return (
-    <div className="flex h-screen overflow-hidden bg-gray-100">
-      <Sidebar
-        storeName={profile.store_name}
-        fullName={profile.full_name}
-        role={profile.role}
+    <PageShell
+      storeName={profile.store_name}
+      fullName={profile.full_name}
+      role={profile.role}
+    >
+      <AdjustmentsClient
+        products={productsWithStock}
+        brands={brands ?? []}
+        adjustments={adjustments ?? []}
+        profile={profile}
       />
-      <main className="flex-1 overflow-y-auto pb-24 lg:pb-0">
-        <AdjustmentsClient
-          products={productsWithStock}
-          brands={brands ?? []}
-          adjustments={adjustments ?? []}
-          profile={profile}
-        />
-      </main>
-    </div>
+    </PageShell>
   );
 }

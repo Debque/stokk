@@ -28,9 +28,7 @@ export default function NotificationBell() {
           .select("id, name, quantity, minimum_stock, is_serialized, brand_id")
           .is("deleted_at", null);
 
-        const { data: brands } = await supabase
-          .from("brands")
-          .select("id, name");
+        const { data: brands } = await supabase.from("brands").select("id, name");
 
         const { data: serializedStock } = await supabase
           .from("stock_items")
@@ -62,7 +60,6 @@ export default function NotificationBell() {
     fetchLowStock();
   }, []);
 
-  // Close on outside click
   useEffect(() => {
     function handleClick(e: MouseEvent) {
       if (ref.current && !ref.current.contains(e.target as Node)) {
@@ -77,8 +74,8 @@ export default function NotificationBell() {
     <div className="relative" ref={ref}>
       <button
         onClick={() => setOpen(!open)}
-        className="relative w-9 h-9 flex items-center justify-center rounded-xl transition hover:bg-gray-100"
-        style={{ color: "#6B7280" }}
+        className="relative w-9 h-9 flex items-center justify-center rounded-xl transition"
+        style={{ color: "var(--text-muted)" }}
         title="Low stock alerts"
       >
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
@@ -87,8 +84,8 @@ export default function NotificationBell() {
         </svg>
         {items.length > 0 && (
           <span
-            className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full flex items-center justify-center text-white text-xs font-bold"
-            style={{ backgroundColor: "#F97316", fontSize: "10px" }}
+            className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full flex items-center justify-center text-white font-bold"
+            style={{ backgroundColor: "var(--color-orange)", fontSize: "10px" }}
           >
             {items.length > 9 ? "9+" : items.length}
           </span>
@@ -97,16 +94,18 @@ export default function NotificationBell() {
 
       {open && (
         <div
-          className="absolute right-0 top-11 w-80 bg-white rounded-2xl border border-gray-100 shadow-xl z-50 overflow-hidden"
-          style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.12)" }}
+          className="absolute right-0 top-11 w-80 rounded-2xl border z-50 overflow-hidden"
+          style={{
+            backgroundColor: "var(--bg-card)",
+            borderColor: "var(--border-subtle)",
+            boxShadow: "0 8px 32px rgba(0,0,0,0.16)",
+          }}
         >
-          <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
-            <h3 className="text-sm font-bold text-gray-900">Low stock alerts</h3>
+          <div className="flex items-center justify-between px-4 py-3 border-b" style={{ borderColor: "var(--border-subtle)" }}>
+            <h3 className="text-sm font-bold" style={{ color: "var(--text-primary)" }}>Low stock alerts</h3>
             {items.length > 0 && (
-              <span
-                className="text-xs font-semibold px-2 py-0.5 rounded-full"
-                style={{ backgroundColor: "#FFF7ED", color: "#9A3412" }}
-              >
+              <span className="text-xs font-semibold px-2 py-0.5 rounded-full"
+                style={{ backgroundColor: "var(--bg-warning)", color: "var(--color-warning-dark)" }}>
                 {items.length} item{items.length !== 1 ? "s" : ""}
               </span>
             )}
@@ -115,39 +114,34 @@ export default function NotificationBell() {
           <div className="max-h-80 overflow-y-auto">
             {loading ? (
               <div className="p-6 text-center">
-                <p className="text-sm text-gray-400">Loading…</p>
+                <p className="text-sm" style={{ color: "var(--text-faint)" }}>Loading…</p>
               </div>
             ) : items.length === 0 ? (
               <div className="p-6 text-center">
-                <div
-                  className="w-10 h-10 rounded-full flex items-center justify-center mx-auto mb-2"
-                  style={{ backgroundColor: "#DCFCE7" }}
-                >
+                <div className="w-10 h-10 rounded-full flex items-center justify-center mx-auto mb-2"
+                  style={{ backgroundColor: "var(--bg-success)" }}>
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                    <path d="M20 6L9 17l-5-5" stroke="#16A34A" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    <path d="M20 6L9 17l-5-5" stroke="var(--color-profit)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
                   </svg>
                 </div>
-                <p className="text-sm font-semibold text-gray-900">All stock levels good</p>
-                <p className="text-xs text-gray-400 mt-0.5">No items need restocking</p>
+                <p className="text-sm font-semibold" style={{ color: "var(--text-primary)" }}>All stock levels good</p>
+                <p className="text-xs mt-0.5" style={{ color: "var(--text-faint)" }}>No items need restocking</p>
               </div>
             ) : (
               <div>
                 {items.map((item, i) => (
                   <div
                     key={item.id}
-                    className="flex items-center justify-between px-4 py-3 hover:bg-gray-50 transition cursor-pointer"
-                    style={{ borderBottom: i < items.length - 1 ? "1px solid #F3F4F6" : "none" }}
-                    onClick={() => {
-                      setOpen(false);
-                      router.push(`/inventory/stock?product=${item.id}`);
-                    }}
+                    className="flex items-center justify-between px-4 py-3 transition cursor-pointer"
+                    style={{ borderBottom: i < items.length - 1 ? `1px solid var(--border-subtle)` : "none" }}
+                    onClick={() => { setOpen(false); router.push(`/inventory/stock?product=${item.id}`); }}
                   >
                     <div className="flex items-center gap-3">
                       <div
                         className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
                         style={{
-                          backgroundColor: item.currentStock === 0 ? "#FEE2E2" : "#FFF7ED",
-                          color: item.currentStock === 0 ? "#DC2626" : "#F97316",
+                          backgroundColor: item.currentStock === 0 ? "var(--bg-danger)" : "var(--bg-warning)",
+                          color: item.currentStock === 0 ? "var(--color-loss)" : "var(--color-orange)",
                         }}
                       >
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
@@ -156,16 +150,13 @@ export default function NotificationBell() {
                         </svg>
                       </div>
                       <div>
-                        <p className="text-sm font-semibold text-gray-900 truncate max-w-44">{item.name}</p>
-                        <p className="text-xs text-gray-400">
+                        <p className="text-sm font-semibold truncate max-w-44" style={{ color: "var(--text-primary)" }}>{item.name}</p>
+                        <p className="text-xs" style={{ color: "var(--text-faint)" }}>
                           {item.currentStock === 0 ? "Out of stock" : `${item.currentStock} left`} · min: {item.minimum_stock}
                         </p>
                       </div>
                     </div>
-                    <span
-                      className="text-xs font-semibold flex-shrink-0"
-                      style={{ color: "#1D9E75" }}
-                    >
+                    <span className="text-xs font-semibold flex-shrink-0" style={{ color: "var(--brand-mid)" }}>
                       + Restock
                     </span>
                   </div>
@@ -175,11 +166,11 @@ export default function NotificationBell() {
           </div>
 
           {items.length > 0 && (
-            <div className="px-4 py-3 border-t border-gray-100">
+            <div className="px-4 py-3 border-t" style={{ borderColor: "var(--border-subtle)" }}>
               <button
                 onClick={() => { setOpen(false); router.push("/inventory?filter=low"); }}
                 className="w-full text-xs font-semibold text-center"
-                style={{ color: "#0F6E56" }}
+                style={{ color: "var(--brand-dark)" }}
               >
                 View all in inventory →
               </button>

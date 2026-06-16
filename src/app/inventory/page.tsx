@@ -1,12 +1,14 @@
 import { createSupabaseServerClient } from "@/lib/supabase-server";
 import { redirect } from "next/navigation";
-import Sidebar from "@/components/Sidebar";
+import PageShell from "@/components/PageShell";
 import InventoryClient from "./InventoryClient";
 
 export default async function InventoryPage() {
   const supabase = await createSupabaseServerClient();
 
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
   const { data: profile } = await supabase
@@ -25,7 +27,9 @@ export default async function InventoryPage() {
   // Fetch products with brand info
   const { data: products } = await supabase
     .from("products")
-    .select("id, name, brand_id, category, is_serialized, cost_price, selling_price, quantity, minimum_stock, image_url")
+    .select(
+      "id, name, brand_id, category, is_serialized, cost_price, selling_price, quantity, minimum_stock, image_url",
+    )
     .is("deleted_at", null)
     .order("created_at", { ascending: false });
 
@@ -48,19 +52,16 @@ export default async function InventoryPage() {
   }));
 
   return (
-    <div className="flex h-screen overflow-hidden bg-gray-100">
-      <Sidebar
-        storeName={profile.store_name}
-        fullName={profile.full_name}
-        role={profile.role}
+    <PageShell
+      storeName={profile.store_name}
+      fullName={profile.full_name}
+      role={profile.role}
+    >
+      <InventoryClient
+        brands={brands ?? []}
+        products={productsWithStock}
+        profile={profile}
       />
-      <main className="flex-1 overflow-y-auto pb-24 lg:pb-0">
-        <InventoryClient
-          brands={brands ?? []}
-          products={productsWithStock}
-          profile={profile}
-        />
-      </main>
-    </div>
+    </PageShell>
   );
 }

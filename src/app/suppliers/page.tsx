@@ -1,12 +1,14 @@
 import { createSupabaseServerClient } from "@/lib/supabase-server";
 import { redirect } from "next/navigation";
-import Sidebar from "@/components/Sidebar";
+import PageShell from "@/components/PageShell";
 import SuppliersClient from "./SuppliersClient";
 
 export default async function SuppliersPage() {
   const supabase = await createSupabaseServerClient();
 
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
   const { data: profile } = await supabase
@@ -27,7 +29,9 @@ export default async function SuppliersPage() {
   // Fetch stock purchases with supplier info
   const { data: purchases } = await supabase
     .from("stock_purchases")
-    .select("id, product_id, quantity, unit_cost, total_cost, supplier, purchased_at")
+    .select(
+      "id, product_id, quantity, unit_cost, total_cost, supplier, purchased_at",
+    )
     .order("purchased_at", { ascending: false });
 
   // Fetch products for purchase display
@@ -37,20 +41,17 @@ export default async function SuppliersPage() {
     .is("deleted_at", null);
 
   return (
-    <div className="flex h-screen overflow-hidden bg-gray-100">
-      <Sidebar
-        storeName={profile.store_name}
-        fullName={profile.full_name}
-        role={profile.role}
+    <PageShell
+      storeName={profile.store_name}
+      fullName={profile.full_name}
+      role={profile.role}
+    >
+      <SuppliersClient
+        suppliers={suppliers ?? []}
+        purchases={purchases ?? []}
+        products={products ?? []}
+        profile={profile}
       />
-      <main className="flex-1 overflow-y-auto pb-24 lg:pb-0">
-        <SuppliersClient
-          suppliers={suppliers ?? []}
-          purchases={purchases ?? []}
-          products={products ?? []}
-          profile={profile}
-        />
-      </main>
-    </div>
+    </PageShell>
   );
 }
