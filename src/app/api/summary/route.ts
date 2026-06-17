@@ -82,7 +82,7 @@ export async function POST(request: NextRequest) {
     const resend = new Resend(process.env.RESEND_API_KEY);
 
     const { error: emailError } = await resend.emails.send({
-      from: `${storeName} <onboarding@resend.dev>`,
+      from: `${storeName} <noreply@stokkco.com>`,
       to: email,
       subject: `${storeName} — Daily Summary · ${now.toLocaleDateString("en-NG", { day: "numeric", month: "short" })}`,
       html: `
