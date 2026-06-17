@@ -1,0 +1,33 @@
+<svg width="1200" height="630" viewBox="0 0 1200 630" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="1200" height="630" fill="#0D3B2E"/>
+  
+  <!-- Grid pattern background -->
+  <rect x="0" y="0" width="1200" height="630" fill="url(#grid)" opacity="0.05"/>
+  
+  <!-- Logo icon -->
+  <rect x="80" y="80" width="72" height="72" rx="16" fill="rgba(255,255,255,0.1)"/>
+  <rect x="93" y="93" width="20" height="20" rx="4" fill="#5DCAA5"/>
+  <rect x="119" y="93" width="20" height="20" rx="4" fill="#5DCAA5" opacity="0.7"/>
+  <rect x="93" y="119" width="20" height="20" rx="4" fill="#5DCAA5" opacity="0.7"/>
+  <rect x="119" y="119" width="20" height="20" rx="4" fill="#5DCAA5" opacity="0.4"/>
+
+  <!-- Stokk text -->
+  <text x="172" y="128" font-family="Arial, sans-serif" font-size="48" font-weight="700" fill="white">Stokk</text>
+  <text x="172" y="152" font-family="Arial, sans-serif" font-size="22" fill="#5DCAA5">Smart Inventory &amp; Profit</text>
+
+  <!-- Main headline -->
+  <text x="80" y="280" font-family="Arial, sans-serif" font-size="72" font-weight="700" fill="white">Know what you have.</text>
+  <text x="80" y="370" font-family="Arial, sans-serif" font-size="72" font-weight="700" fill="#5DCAA5">Know what you made.</text>
+
+  <!-- Description -->
+  <text x="80" y="450" font-family="Arial, sans-serif" font-size="28" fill="rgba(255,255,255,0.7)">Real-time stock visibility, automatic profit tracking,</text>
+  <text x="80" y="490" font-family="Arial, sans-serif" font-size="28" fill="rgba(255,255,255,0.7)">and full IMEI accountability — all in one place.</text>
+
+  <!-- Bottom tag -->
+  <rect x="80" y="555" width="220" height="44" rx="22" fill="rgba(93,202,165,0.2)"/>
+  <text x="190" y="583" font-family="Arial, sans-serif" font-size="18" fill="#5DCAA5" text-anchor="middle">HOPEX COMMS</text>
+
+  <!-- stokkco.com -->
+  <text x="1120" y="583" font-family="Arial, sans-serif" font-size="22" fill="rgba(255,255,255,0.4)" text-anchor="end">stokkco.com</text>
+</svg>
