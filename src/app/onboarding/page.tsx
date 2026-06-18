@@ -52,6 +52,13 @@ export default function OnboardingPage() {
     const { data, error: signUpError } = await supabase.auth.signUp({
       email,
       password,
+      options: {
+        data: {
+          full_name: `${firstName} ${lastName}`.trim(),
+          store_name: storeName,
+          role,
+        },
+      },
     });
 
     if (signUpError) {
