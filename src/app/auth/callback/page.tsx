@@ -14,35 +14,39 @@ export default function AuthCallbackPage() {
         const code = url.searchParams.get("code");
         const tokenHash = url.searchParams.get("token_hash");
         const type = url.searchParams.get("type");
+        const errorParam = url.searchParams.get("error");
+        const errorDescription = url.searchParams.get("error_description");
+
+        if (errorParam) {
+          setError(errorDescription ?? errorParam);
+          return;
+        }
 
         setStatus("Verifying your email…");
 
         let userId: string | null = null;
 
-        if (tokenHash && !tokenHash.startsWith("pkce_")) {
-          // Regular OTP token hash
-          const { data, error: verifyError } = await supabase.auth.verifyOtp({
-            token_hash: tokenHash,
-            type: (type as "signup" | "email") ?? "email",
-          });
-          if (verifyError) { setError(`Verification failed: ${verifyError.message}`); return; }
-          userId = data?.user?.id ?? null;
-
-        } else if (tokenHash && tokenHash.startsWith("pkce_")) {
-          // PKCE token hash — exchange as session code
-          const { data, error: exchangeError } = await supabase.auth.exchangeCodeForSession(tokenHash);
-          if (exchangeError) { setError(`Verification failed: ${exchangeError.message}`); return; }
-          userId = data?.user?.id ?? null;
-
-        } else if (code) {
-          // Standard PKCE code
+        if (code) {
           const { data, error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
           if (exchangeError) { setError(`Verification failed: ${exchangeError.message}`); return; }
           userId = data?.user?.id ?? null;
-
+        } else if (tokenHash && type && !tokenHash.startsWith("pkce_")) {
+          const { data, error: verifyError } = await supabase.auth.verifyOtp({
+            token_hash: tokenHash,
+            type: type as "signup" | "email",
+          });
+          if (verifyError) { setError(`Verification failed: ${verifyError.message}`); return; }
+          userId = data?.user?.id ?? null;
         } else {
-          setError("No confirmation code found. Please try signing up again.");
-          return;
+          // Try to get session from URL hash (implicit flow)
+          const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+          if (sessionError) { setError(`Verification failed: ${sessionError.message}`); return; }
+          userId = session?.user?.id ?? null;
+
+          if (!userId) {
+            setError("No confirmation code found. Please try signing up again.");
+            return;
+          }
         }
 
         if (!userId) {
@@ -52,7 +56,6 @@ export default function AuthCallbackPage() {
 
         setStatus("Setting up your account…");
 
-        // Check if profile already exists
         const { data: existingProfile } = await supabase
           .from("profiles")
           .select("id")
@@ -60,7 +63,6 @@ export default function AuthCallbackPage() {
           .single();
 
         if (!existingProfile) {
-          // Create profile via API with service role
           const response = await fetch("/api/register", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
