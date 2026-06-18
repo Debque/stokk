@@ -67,20 +67,22 @@ export default function OnboardingPage() {
     }
 
     // If email confirmation is enabled, session will be null
-    // Create profile immediately using the user ID we already have
+    // Use API route with service role to create profile
     if (!data.session) {
-      const { error: profileError } = await supabase.from("profiles").insert({
-        id: data.user.id,
-        full_name: `${firstName} ${lastName}`.trim(),
-        store_name: storeName,
-        role,
-        currency: "NGN",
-        sidebar_collapsed: false,
-        inventory_view: "grid",
+      const response = await fetch("/api/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId: data.user.id,
+          fullName: `${firstName} ${lastName}`.trim(),
+          storeName,
+          role,
+        }),
       });
 
-      if (profileError && !profileError.message.includes("duplicate")) {
-        setError(profileError.message);
+      const result = await response.json();
+      if (!response.ok) {
+        setError(result.error ?? "Something went wrong.");
         setLoading(false);
         return;
       }
