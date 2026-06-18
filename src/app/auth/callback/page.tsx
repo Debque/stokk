@@ -15,56 +15,68 @@ export default function AuthCallbackPage() {
         const tokenHash = url.searchParams.get("token_hash");
         const type = url.searchParams.get("type");
 
-        console.log("Callback params:", { code: !!code, tokenHash: !!tokenHash, type });
-
         setStatus("Verifying your email…");
 
-        if (tokenHash) {
+        let userId: string | null = null;
+
+        if (tokenHash && !tokenHash.startsWith("pkce_")) {
+          // Regular OTP token hash
           const { data, error: verifyError } = await supabase.auth.verifyOtp({
             token_hash: tokenHash,
-            type: (type as "signup" | "email") ?? "signup",
+            type: (type as "signup" | "email") ?? "email",
           });
+          if (verifyError) { setError(`Verification failed: ${verifyError.message}`); return; }
+          userId = data?.user?.id ?? null;
 
-          console.log("verifyOtp result:", { user: data?.user?.id, error: verifyError?.message });
+        } else if (tokenHash && tokenHash.startsWith("pkce_")) {
+          // PKCE token hash — exchange as session code
+          const { data, error: exchangeError } = await supabase.auth.exchangeCodeForSession(tokenHash);
+          if (exchangeError) { setError(`Verification failed: ${exchangeError.message}`); return; }
+          userId = data?.user?.id ?? null;
 
-          if (verifyError) {
-            setError(`Verification failed: ${verifyError.message}`);
-            return;
-          }
-
-          if (!data?.user) {
-            setError("Could not verify your account. Please try again.");
-            return;
-          }
-
-          setStatus("Taking you to your dashboard…");
-          window.location.href = "/dashboard";
-          return;
-        }
-
-        if (code) {
+        } else if (code) {
+          // Standard PKCE code
           const { data, error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
+          if (exchangeError) { setError(`Verification failed: ${exchangeError.message}`); return; }
+          userId = data?.user?.id ?? null;
 
-          console.log("exchangeCode result:", { user: data?.user?.id, error: exchangeError?.message });
-
-          if (exchangeError) {
-            setError(`Verification failed: ${exchangeError.message}`);
-            return;
-          }
-
-          if (!data?.user) {
-            setError("Could not verify your account. Please try again.");
-            return;
-          }
-
-          setStatus("Taking you to your dashboard…");
-          window.location.href = "/dashboard";
+        } else {
+          setError("No confirmation code found. Please try signing up again.");
           return;
         }
 
-        setError("No confirmation code found. Please try signing up again.");
+        if (!userId) {
+          setError("Could not verify your account. Please try again.");
+          return;
+        }
+
+        setStatus("Setting up your account…");
+
+        // Check if profile already exists
+        const { data: existingProfile } = await supabase
+          .from("profiles")
+          .select("id")
+          .eq("id", userId)
+          .single();
+
+        if (!existingProfile) {
+          // Create profile via API with service role
+          const response = await fetch("/api/register", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ userId }),
+          });
+          const result = await response.json();
+          if (!response.ok) {
+            setError(`Account setup failed: ${result.error}`);
+            return;
+          }
+        }
+
+        setStatus("Taking you to your dashboard…");
+        window.location.href = "/dashboard";
+
       } catch (err) {
-        console.error("Callback error:", err);
         setError(`Something went wrong: ${err instanceof Error ? err.message : String(err)}`);
       }
     }
@@ -85,11 +97,7 @@ export default function AuthCallbackPage() {
             <h2 className="text-lg font-bold text-gray-900 mb-2">Confirmation failed</h2>
             <p className="text-sm text-gray-500 leading-relaxed">{error}</p>
           </div>
-          <button
-            onClick={() => window.location.href = "/login"}
-            className="w-full h-11 text-white text-sm font-semibold rounded-lg"
-            style={{ backgroundColor: "#0D3B2E" }}
-          >
+          <button onClick={() => window.location.href = "/login"} className="w-full h-11 text-white text-sm font-semibold rounded-lg" style={{ backgroundColor: "#0D3B2E" }}>
             Go to login
           </button>
         </div>
