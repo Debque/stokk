@@ -67,20 +67,24 @@ export default function OnboardingPage() {
     }
 
     // If email confirmation is enabled, session will be null
-    // Store profile data in localStorage to write after confirmation
+    // Create profile immediately using the user ID we already have
     if (!data.session) {
-      localStorage.setItem(
-        "stokk_pending_profile",
-        JSON.stringify({
-          id: data.user.id,
-          full_name: `${firstName} ${lastName}`.trim(),
-          store_name: storeName,
-          role,
-          currency: "NGN",
-          sidebar_collapsed: false,
-          inventory_view: "grid",
-        }),
-      );
+      const { error: profileError } = await supabase.from("profiles").insert({
+        id: data.user.id,
+        full_name: `${firstName} ${lastName}`.trim(),
+        store_name: storeName,
+        role,
+        currency: "NGN",
+        sidebar_collapsed: false,
+        inventory_view: "grid",
+      });
+
+      if (profileError && !profileError.message.includes("duplicate")) {
+        setError(profileError.message);
+        setLoading(false);
+        return;
+      }
+
       setEmailSent(true);
       setLoading(false);
       return;

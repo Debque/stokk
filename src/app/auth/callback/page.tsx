@@ -51,41 +51,8 @@ if (tokenHash && type) {
           setError("Could not verify your account. Please try again.");
           return;
         }
-
-        setStatus("Setting up your store…");
-
-        // Check if profile already exists
-        const { data: profile } = await supabase
-          .from("profiles")
-          .select("id")
-          .eq("id", data.user!.id)
-          .single();
-
-        if (profile) {
-          // Profile exists — go to dashboard
-          setStatus("Taking you to your dashboard…");
-          window.location.href = "/dashboard";
-          return;
-        }
-
-        // No profile yet — check localStorage for pending profile data
-        const pending = localStorage.getItem("stokk_pending_profile");
-
-        if (pending) {
-          const profileData = JSON.parse(pending);
-
-         const { error: profileError } = await supabase
-  .from("profiles")
-  .insert({ ...profileData, id: data!.user!.id });
-          if (profileError && !profileError.message.includes("duplicate")) {
-            setError(profileError.message);
-            return;
-          }
-
-          localStorage.removeItem("stokk_pending_profile");
-        }
-
-        setStatus("Taking you to your dashboard…");
+setStatus("Taking you to your dashboard…");
+        // Profile was already created during signup — just redirect
         window.location.href = "/dashboard";
       } catch (err) {
         console.error("Callback error:", err);
